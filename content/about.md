@@ -1,6 +1,7 @@
 ---
-title: "About"
-date: "2016-05-05T21:48:51-07:00"
+title: Om
+author: Christian Lindell
+date: '2016-05-06'
 ---
 
-This is a "hello world" example website for the [**blogdown**](https://github.com/rstudio/blogdown) package. The theme was forked from [@jrutheiser/hugo-lithium-theme](https://github.com/jrutheiser/hugo-lithium-theme) and modified by [Yihui Xie](https://github.com/yihui/hugo-lithium).
+Jag heter Christian Lindell, jobbar som utredare på Region Skånes avdelning för Samhällsanalys. Inriktningen är framför allt arbetsmarknad och näringsliv. Min bakgrund är inom kulturgeografi och samhällsplanering och jag har tidigare ägnat mig åt transportforskning på doktorandnivå och hunnit med diverse utredningar på bland annat Nutek och på olika länsstyrelser, 
