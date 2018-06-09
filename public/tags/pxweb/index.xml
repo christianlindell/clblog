@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pxweb on Ditochdata</title>
+    <link>/tags/pxweb/</link>
+    <description>Recent content in Pxweb on Ditochdata</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>se</language>
+    <lastBuildDate>Fri, 08 Jun 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/pxweb/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Ladda hem data från SCB med pxweb</title>
+      <link>/2018/06/08/ladda-hem-data-fr%C3%A5n-scb/</link>
+      <pubDate>Fri, 08 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/06/08/ladda-hem-data-fr%C3%A5n-scb/</guid>
+      <description>När jag började lära mig R för ett antal år sedan så var något av det krångligaste att läsa in externa data för att få något att jobba med. Numera är det betydligt enklare än det var för åtta - nio år sedan då det ständiga rådet var att spara data som en textfil innan man läste in den i R.
+Ett av mina favoritverktyg för att ladda hem SCB-data är ett paket till R som heter pxweb och kan installeras från CRAN.</description>
+    </item>
+    
+  </channel>
+</rss>
