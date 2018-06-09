@@ -1,44 +1,24 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>R on A Hugo website</title>
+    <title>R on Ditochdata</title>
     <link>/categories/r/</link>
-    <description>Recent content in R on A Hugo website</description>
+    <description>Recent content in R on Ditochdata</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>se</language>
-    <lastBuildDate>Wed, 06 Jun 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 08 Jun 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Testar blogdown</title>
-      <link>/2018/06/06/testar-blogdown/</link>
-      <pubDate>Wed, 06 Jun 2018 00:00:00 +0000</pubDate>
+      <title>Ladda hem data från SCB med pxweb</title>
+      <link>/2018/06/08/ladda-hem-data-fr%C3%A5n-scb/</link>
+      <pubDate>Fri, 08 Jun 2018 00:00:00 +0000</pubDate>
       
-      <guid>/2018/06/06/testar-blogdown/</guid>
-      <description>Användarnätverk för RSamverkansorganisationen RegLab har ett analytikernätverk, Inom detta nätverk har en användargrupp för personer intresserade av R, reproducerbara rapporter och visualisering bildats. Nätverket kommer att ha sitt första möte i Stockholm i Tillväxtverkets lokaler.
-</description>
-    </item>
-    
-    <item>
-      <title>Why a blog&#34;</title>
-      <link>/2018/06/06/why-a-blog/</link>
-      <pubDate>Wed, 06 Jun 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/2018/06/06/why-a-blog/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Hello R Markdown</title>
-      <link>/2015/07/23/hello-r-markdown/</link>
-      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
-      
-      <guid>/2015/07/23/hello-r-markdown/</guid>
-      <description>R MarkdownThis is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
-You can embed an R code chunk like this:
-summary(cars)## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
+      <guid>/2018/06/08/ladda-hem-data-fr%C3%A5n-scb/</guid>
+      <description>När jag började lära mig R för ett antal år sedan så var något av det krångligaste att läsa in externa data för att få något att jobba med. Numera är det betydligt enklare än det var för åtta - nio år sedan då det ständiga rådet var att spara data som en textfil innan man läste in den i R.
+Ett av mina favoritverktyg för att ladda hem SCB-data är ett paket till R som heter pxweb och kan installeras från CRAN.</description>
     </item>
     
   </channel>
