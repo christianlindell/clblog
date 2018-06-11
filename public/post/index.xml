@@ -5,14 +5,24 @@
     <link>/post/</link>
     <description>Recent content in Posts on Ditochdata</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>se</language>
-    <lastBuildDate>Fri, 08 Jun 2018 00:00:00 +0000</lastBuildDate>
+    <language>sv</language>
+    <lastBuildDate>Sun, 10 Jun 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Ladda hem data från SCB med pxweb</title>
+      <title>Ladda hem data från SCB del 2 - använda SCB:s api</title>
+      <link>/2018/06/10/ladda-hem-data-fr%C3%A5n-scb-del-2-anv%C3%A4nda-scb-s-api/</link>
+      <pubDate>Sun, 10 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/06/10/ladda-hem-data-fr%C3%A5n-scb-del-2-anv%C3%A4nda-scb-s-api/</guid>
+      <description>I mitt förra inlägg beskrev jag hur man använder det utmärkta pxweb-paketet för att ladda ner data från SCB:s öppna databas. Men ibland kan det vara smidigare att jobba direkt mot SCB:s API. R har via paketen httr och jsonlite utmärkta funktioner för att jobba med frågor till databaser på nätet.
+Men varför krångla med att använda SCB:s API när pxweb redan finns? Det finns några fall då det är smidigare att jobba direkt mot SCB:s API.</description>
+    </item>
+    
+    <item>
+      <title>Ladda hem data från SCB del 1 -  pxweb</title>
       <link>/2018/06/08/ladda-hem-data-fr%C3%A5n-scb/</link>
       <pubDate>Fri, 08 Jun 2018 00:00:00 +0000</pubDate>
       

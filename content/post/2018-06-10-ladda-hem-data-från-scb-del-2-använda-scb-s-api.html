@@ -1,0 +1,114 @@
+---
+title: Ladda hem data från SCB del 2 - använda SCB:s api
+author: Christian Lindell
+date: '2018-06-10'
+categories:
+  - R
+tags:
+  - API
+  - SCB
+slug: ladda-hem-data-från-scb-del-2-använda-scb-s-api
+---
+
+
+
+<p>I mitt förra inlägg beskrev jag hur man använder det utmärkta pxweb-paketet för att ladda ner data från SCB:s öppna databas. Men ibland kan det vara smidigare att jobba direkt mot SCB:s API. R har via paketen httr och jsonlite utmärkta funktioner för att jobba med frågor till databaser på nätet.</p>
+<p>Men varför krångla med att använda SCB:s API när pxweb redan finns? Det finns några fall då det är smidigare att jobba direkt mot SCB:s API.</p>
+<ul>
+<li><p>Man kan hoppa över dimensioner via API:et. Om man är ute efter totalbefolkningen i alla Sveriges kommuner är det onödigt att samtidigt behöva ladda ner civilstånd och kön, vilket man måste göra om man använder pxweb.</p></li>
+<li><p>Det går enkelt att fråga efter metadata om en tabell. Man kan till exempel ställa en fråga om vilket som är senaste år i en av SCB:s tabeller och kolla om man redan har laddat ned data för det året och sparat det lokalt. Om så är fallet behöver man inte uppdatera den lokala tabellen.</p></li>
+</ul>
+<p>Ska man anropa SCB:s API behöver man två uppgifter: URL:en till databasen samt en json-formaterad fråga. Enklast sättet att få tag i uppgifterna är att gå in i SCB:s databas och bygga en fråga i SCB:s användargränssnitt. Nedan har jag frågat efter befolkningen i Malmö och Lund år 2017. Jag har hoppat över alla andra dimensioner.</p>
+<div class="figure">
+<img src="/post/Statistikdatabasen.png" />
+
+</div>
+<p>Välj därefter att visa resultatet som tabell i webbläsaren. Under tabellen finns det en länk med texten “API för denna tabell”. När du trycker på länken visas en två textboxar: Den första innehåller URL:en till tabellen och den andra visar json-frågan som returnerar tabellen jag frågat efter.</p>
+<div class="figure">
+<img src="/post/Statistikdatabasen_tabell.png" />
+
+</div>
+<p>Vi börjar med att spara URL:en till databasen i variabeln apiurl:</p>
+<pre class="r"><code>apiurl &lt;- &quot;http://api.scb.se/OV0104/v1/doris/sv/ssd/START/BE/BE0101/BE0101A/BefolkningNy&quot;</code></pre>
+<p>Json-frågan ovan ska vi använda för att hämta hem data från SCB. En minimal justering av frågan behöver dock göras först: Ändra “format”: “px” till “format”: “json” under “response”. Därefter sparar vi frågan i variabeln “bodytxt” (glöm inte att sätta frågan inom enkla citattecken):</p>
+<pre class="r"><code>bodytxt &lt;- &#39;{
+  &quot;query&quot;: [
+    {
+      &quot;code&quot;: &quot;Region&quot;,
+      &quot;selection&quot;: {
+        &quot;filter&quot;: &quot;vs:RegionKommun07&quot;,
+        &quot;values&quot;: [
+          &quot;1280&quot;,
+          &quot;1281&quot;
+        ]
+      }
+    },
+    {
+      &quot;code&quot;: &quot;ContentsCode&quot;,
+      &quot;selection&quot;: {
+        &quot;filter&quot;: &quot;item&quot;,
+        &quot;values&quot;: [
+          &quot;BE0101N1&quot;
+        ]
+      }
+    },
+    {
+      &quot;code&quot;: &quot;Tid&quot;,
+      &quot;selection&quot;: {
+        &quot;filter&quot;: &quot;item&quot;,
+        &quot;values&quot;: [
+          &quot;2017&quot;
+        ]
+      }
+    }
+  ],
+  &quot;response&quot;: {
+    &quot;format&quot;: &quot;json&quot;
+  }
+}&#39;</code></pre>
+<p>Nu är det dags att ladda hem tabellen från SCB genom att anropa SCB:s api med hjälp av httr:</p>
+<p>Funktionen nedan gör om listan som returnerats från SCB till en någorlunda vettigt formaterad dataframe. Notera dock att vi saknar namn på kommunerna. Dessvärre returnerar anropet till SCB bara kommunkoderna. Jag har inte lyckats hitta någon lösning på det problemet. Behöver man kommunnamnen så får man skapa en tabell med kommunkoder och kommunnamn som man kan joina med kommunkoderna från SCB.</p>
+<pre class="r"><code>fparse_jsontab_scb &lt;- function(ldatajson) {
+  library(tidyverse)
+  dftab &lt;- bind_cols(do.call(rbind.data.frame, ldatajson$data$key), 
+                      do.call(rbind.data.frame, ldatajson$data$values))
+  names(dftab) &lt;- ldatajson$columns$text
+  print(dftab)
+  dftab &lt;- mutate_if(dftab, is.factor, as.character)
+  for (i in 1:ncol(dftab)) {
+    typ &lt;- ldatajson$columns[[i, &quot;type&quot;]]
+    if (typ == &quot;c&quot;) {
+      dftab[i] &lt;- as.numeric(dftab[[i]]) }
+    else if (typ == &quot;t&quot; &amp;
+             !is.na(as.numeric(dftab[[1,i]])) &amp;
+             !(ldatajson$columns$text[i] %in% c(&quot;år&quot;, &quot;year&quot;))) { dftab[i] &lt;- as.numeric(dftab[[i]]) } 
+    else if (typ == &quot;t&quot; &amp;
+                !is.na(as.numeric(dftab[[1,i]])) &amp;
+             ldatajson$columns$text[i] %in% c(&quot;år&quot;, &quot;year&quot;)) {
+      dftab[i] &lt;- as.integer(dftab[[i]])
+    }
+  }
+  return(dftab)
+} </code></pre>
+<p>Nu provar vi att formatera den lista som returnerades från SCB med funktionen ovan, Resultatet blir en dataframe med korrekt angivna variabeltyper.</p>
+<pre class="r"><code>dftest &lt;- fparse_jsontab_scb(lanswer)</code></pre>
+<pre><code>##   region   år Folkmängd
+## 1   1280 2017    333633
+## 2   1281 2017    121274</code></pre>
+<p>Det går också att få fram metainformation om en tabell genom att anropa SCB:s API med bara URL:en som argument. Nedan visas en funktion som visar senaste år som det finns statistik för i en specifik tabell som anges i den URL som skickas med som argument. Vilket av metavariablerna som innehåller årtalet kan variera och måste preciseras i funktionsargumentet index1.</p>
+<pre class="r"><code>fscb_senaste_ar &lt;- function(url, index1 = 2) {
+  library(httr)
+  library(tidyverse)
+  library(jsonlite)
+  library(magrittr)
+  
+  ltabmeta &lt;- content(GET(url))
+  max_ar &lt;- ltabmeta$variables[[index1]]$valueTexts %&gt;%
+  unlist(.) %&gt;%
+  as.integer(.) %&gt;%
+  max(.)
+  
+  return(max_ar)
+}</code></pre>
+<pre class="r"><code>print(fscb_senaste_ar(apiurl, 6))</code></pre>
+<pre><code>## [1] 2017</code></pre>

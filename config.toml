@@ -1,5 +1,5 @@
 baseurl = "/"
-languageCode = "se"
+languageCode = "sv"
 title = "Ditochdata"
 theme = "hugo-lithium"
 googleAnalytics = ""
