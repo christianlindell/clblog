@@ -1,6 +1,6 @@
 baseurl = "/"
 languageCode = "sv"
-title = "Ditochdata"
+title = "Ditt och data"
 theme = "hugo-lithium"
 googleAnalytics = ""
 disqusShortname = ""
