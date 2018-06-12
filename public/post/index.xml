@@ -17,12 +17,12 @@
       <pubDate>Tue, 12 Jun 2018 00:00:00 +0000</pubDate>
       
       <guid>/2018/06/12/ladda-hem-data-fran-scb-del-3-scb-s-api-med-csv-som-format/</guid>
-      <description>I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv.
-Den här gången har jag valt plocka värden ur alla dimensioner i SCB:s befolkningstabell i det grafiska webbgränssnittet för SCB:s databas. Jag har sedan valt att visa resultatet som “tabell . layout 1”, och sedan valt att visa json-frågan på resultatsidan. I koden nedan har jag klistrat in json-koden för frågan till apiet och sparat den i variablen “bodytext” och jag har sparat URL:en till api:et i variabeln “apiurl”.</description>
+      <description>I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv. Vinsten med det är att jag får med namn i klartext och inte bara koder. För regioner får jag alltså med kommunnamnen och inte bara kommunkod. Nackdelen är att det blir lite besvärligare att få en bra tabellstruktur.
+Den här gången har jag valt plocka värden ur alla dimensioner i SCB:s befolkningstabell i det grafiska webbgränssnittet för SCB:s databas.</description>
     </item>
     
     <item>
-      <title>Ladda hem data från SCB del 2 - använda SCB:s api</title>
+      <title>Ladda hem data från SCB del 2 - SCB:s api med json som format</title>
       <link>/2018/06/10/ladda-hem-data-fr%C3%A5n-scb-del-2-anv%C3%A4nda-scb-s-api/</link>
       <pubDate>Sun, 10 Jun 2018 00:00:00 +0000</pubDate>
       

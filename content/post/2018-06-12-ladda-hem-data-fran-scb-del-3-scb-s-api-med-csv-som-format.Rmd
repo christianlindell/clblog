@@ -10,7 +10,7 @@ tags:
   - SCB
 ---
 
-I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv.
+I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv. Vinsten med det är att jag får med namn i klartext och inte bara koder. För regioner får jag alltså med kommunnamnen och inte bara kommunkod. Nackdelen är att det blir lite besvärligare att få en bra tabellstruktur.
 
 Den här gången har jag valt plocka värden ur alla dimensioner i SCB:s befolkningstabell i det grafiska webbgränssnittet för SCB:s databas. Jag har sedan valt att visa resultatet som "tabell . layout 1", och sedan valt att visa json-frågan på resultatsidan. I koden nedan har jag klistrat in json-koden för frågan till apiet och sparat den i variablen "bodytext" och jag har sparat URL:en till api:et i variabeln "apiurl". Notera att jag denna gång har valt "csv" som format under "response".
 
@@ -18,7 +18,9 @@ Den här gången har jag valt plocka värden ur alla dimensioner i SCB:s befolkn
 ```{r, message=FALSE, warning=FALSE}
 library(jsonlite)
 library(httr)
-library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(stringr)
 library(janitor)
 
 
@@ -136,7 +138,8 @@ Eftersom kolumnnamnen från SCB kan innehålla flera ord och svenska tecken, så
   head(df)
 ```
 
-Resultatet ser ganska ok ut, men befolkningen för varje årtal ligger i en egen kolumn. Jag vill helst att alla årtal ska ligga i en egen kolumn. Paketet tidyr har en funktion som heter "gather" som kan användas för att omformatera tabellen som jag vill ha den. Jag vill dessutom att kommunkoderna och kommunnamnen ska stå i varsin kolumn. Detta gör jag med hjälp av "sepatate"-funktionen i tidyr:
+Resultatet ser ganska ok ut, men befolkningen för varje årtal ligger i en egen kolumn. Jag vill helst att alla årtal ska ligga i en egen kolumn. Paketet tidyr har en funktion som heter "gather" som kan användas för att omformatera tabellen som jag vill ha den. Jag använder även funktionern "str_remove_all" i stringr-paketet för att ta bort alla förekomster av "Folkmangd_" i aar- kolumnen, för att därefter ändra format från character till intiger. Jag vill dessutom att kommunkoderna och kommunnamnen ska stå i varsin kolumn. Detta gör jag med hjälp av "sepatate"-funktionen i tidyr.
+
 
 ```{r}
   df %>%
@@ -164,7 +167,17 @@ Eftersom årtalen nästan alltid finns i den sista listan som ingår i variabeln
   vardevar <- length(bodytxt[["query"]][[index]][["selection"]][["values"]]) - 1
   
   df %>% 
-    gather(aar, value, (ncol(.)-vardevar):ncol(.))
+    gather(aar, value, (ncol(.)-vardevar):ncol(.)) %>%
+        mutate(aar = str_remove_all(aar, "folkmangd_")) %>%
+    mutate(aar = as.integer(aar)) %>%
+    separate(
+      region,
+      c("kom_kod", "kom_namn"),
+      sep = " ",
+      extra = "merge",
+      remove = TRUE
+    )
+    
 ```
 
 

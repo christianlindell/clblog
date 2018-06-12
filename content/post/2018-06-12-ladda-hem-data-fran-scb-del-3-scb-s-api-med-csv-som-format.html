@@ -12,11 +12,13 @@ tags:
 
 
 
-<p>I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv.</p>
+<p>I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv. Vinsten med det är att jag får med namn i klartext och inte bara koder. För regioner får jag alltså med kommunnamnen och inte bara kommunkod. Nackdelen är att det blir lite besvärligare att få en bra tabellstruktur.</p>
 <p>Den här gången har jag valt plocka värden ur alla dimensioner i SCB:s befolkningstabell i det grafiska webbgränssnittet för SCB:s databas. Jag har sedan valt att visa resultatet som “tabell . layout 1”, och sedan valt att visa json-frågan på resultatsidan. I koden nedan har jag klistrat in json-koden för frågan till apiet och sparat den i variablen “bodytext” och jag har sparat URL:en till api:et i variabeln “apiurl”. Notera att jag denna gång har valt “csv” som format under “response”.</p>
 <pre class="r"><code>library(jsonlite)
 library(httr)
-library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(stringr)
 library(janitor)
 
 
@@ -128,7 +130,7 @@ bodytxt0 &lt;- &#39;{
 ## 5 0561 Åtvidaberg ogifta     15-24 år män               696            689
 ## 6 0561 Åtvidaberg ogifta     15-24 år kvinn~            635            626
 ## # ... with 2 more variables: folkmangd_2016 &lt;int&gt;, folkmangd_2017 &lt;int&gt;</code></pre>
-<p>Resultatet ser ganska ok ut, men befolkningen för varje årtal ligger i en egen kolumn. Jag vill helst att alla årtal ska ligga i en egen kolumn. Paketet tidyr har en funktion som heter “gather” som kan användas för att omformatera tabellen som jag vill ha den. Jag vill dessutom att kommunkoderna och kommunnamnen ska stå i varsin kolumn. Detta gör jag med hjälp av “sepatate”-funktionen i tidyr:</p>
+<p>Resultatet ser ganska ok ut, men befolkningen för varje årtal ligger i en egen kolumn. Jag vill helst att alla årtal ska ligga i en egen kolumn. Paketet tidyr har en funktion som heter “gather” som kan användas för att omformatera tabellen som jag vill ha den. Jag använder även funktionern “str_remove_all” i stringr-paketet för att ta bort alla förekomster av “Folkmangd_” i aar- kolumnen, för att därefter ändra format från character till intiger. Jag vill dessutom att kommunkoderna och kommunnamnen ska stå i varsin kolumn. Detta gör jag med hjälp av “sepatate”-funktionen i tidyr.</p>
 <pre class="r"><code>  df %&gt;%
     gather(aar, value, folkmangd_2014:folkmangd_2017) %&gt;%
     mutate(aar = str_remove_all(aar, &quot;folkmangd_&quot;)) %&gt;%
@@ -161,18 +163,27 @@ bodytxt0 &lt;- &#39;{
   vardevar &lt;- length(bodytxt[[&quot;query&quot;]][[index]][[&quot;selection&quot;]][[&quot;values&quot;]]) - 1
   
   df %&gt;% 
-    gather(aar, value, (ncol(.)-vardevar):ncol(.))</code></pre>
-<pre><code>## # A tibble: 480 x 6
-##    region          civilstand alder    kon     aar            value
-##    &lt;chr&gt;           &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;chr&gt;          &lt;int&gt;
-##  1 0561 Åtvidaberg ogifta     0-4 år   män     folkmangd_2014   273
-##  2 0561 Åtvidaberg ogifta     0-4 år   kvinnor folkmangd_2014   275
-##  3 0561 Åtvidaberg ogifta     5-14 år  män     folkmangd_2014   618
-##  4 0561 Åtvidaberg ogifta     5-14 år  kvinnor folkmangd_2014   641
-##  5 0561 Åtvidaberg ogifta     15-24 år män     folkmangd_2014   696
-##  6 0561 Åtvidaberg ogifta     15-24 år kvinnor folkmangd_2014   635
-##  7 0561 Åtvidaberg ogifta     25-34 år män     folkmangd_2014   397
-##  8 0561 Åtvidaberg ogifta     25-34 år kvinnor folkmangd_2014   277
-##  9 0561 Åtvidaberg ogifta     35-44 år män     folkmangd_2014   320
-## 10 0561 Åtvidaberg ogifta     35-44 år kvinnor folkmangd_2014   227
+    gather(aar, value, (ncol(.)-vardevar):ncol(.)) %&gt;%
+        mutate(aar = str_remove_all(aar, &quot;folkmangd_&quot;)) %&gt;%
+    mutate(aar = as.integer(aar)) %&gt;%
+    separate(
+      region,
+      c(&quot;kom_kod&quot;, &quot;kom_namn&quot;),
+      sep = &quot; &quot;,
+      extra = &quot;merge&quot;,
+      remove = TRUE
+    )</code></pre>
+<pre><code>## # A tibble: 480 x 7
+##    kom_kod kom_namn   civilstand alder    kon       aar value
+##    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;int&gt;
+##  1 0561    Åtvidaberg ogifta     0-4 år   män      2014   273
+##  2 0561    Åtvidaberg ogifta     0-4 år   kvinnor  2014   275
+##  3 0561    Åtvidaberg ogifta     5-14 år  män      2014   618
+##  4 0561    Åtvidaberg ogifta     5-14 år  kvinnor  2014   641
+##  5 0561    Åtvidaberg ogifta     15-24 år män      2014   696
+##  6 0561    Åtvidaberg ogifta     15-24 år kvinnor  2014   635
+##  7 0561    Åtvidaberg ogifta     25-34 år män      2014   397
+##  8 0561    Åtvidaberg ogifta     25-34 år kvinnor  2014   277
+##  9 0561    Åtvidaberg ogifta     35-44 år män      2014   320
+## 10 0561    Åtvidaberg ogifta     35-44 år kvinnor  2014   227
 ## # ... with 470 more rows</code></pre>
