@@ -99,7 +99,7 @@ lanswer <- content(req, simplifyDataFrame = TRUE)
 
 ```
 
-Funktionen nedan gör om listan som returnerats från SCB till en någorlunda vettigt formaterad dataframe. Notera dock att vi saknar namn på kommunerna. Dessvärre returnerar anropet till SCB bara kommunkoderna. Jag har inte lyckats hitta någon lösning på det problemet. Behöver man kommunnamnen så får man skapa en tabell med kommunkoder och kommunnamn som man kan joina med kommunkoderna från SCB.
+Funktionen nedan gör om listan som returnerats från SCB till en någorlunda vettigt formaterad dataframe. Notera dock att vi saknar namn på kommunerna. Dessvärre returnerar anropet till SCB bara kommunkoderna om man väljer json som returformat.Behöver man kommunnamnen så får man skapa en tabell med kommunkoder och kommunnamn som man kan joina med kommunkoderna från SCB.
 
 
 ```{r}

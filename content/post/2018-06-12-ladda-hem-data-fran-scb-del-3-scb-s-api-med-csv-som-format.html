@@ -1,0 +1,178 @@
+---
+title: Ladda hem data från SCB del 3 - SCB:s api med csv som format
+author: Christian Lindell
+date: '2018-06-12'
+slug: ladda-hem-data-fran-scb-del-3-scb-s-api-med-csv-som-format
+categories:
+  - R
+tags:
+  - API
+  - SCB
+---
+
+
+
+<p>I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv.</p>
+<p>Den här gången har jag valt plocka värden ur alla dimensioner i SCB:s befolkningstabell i det grafiska webbgränssnittet för SCB:s databas. Jag har sedan valt att visa resultatet som “tabell . layout 1”, och sedan valt att visa json-frågan på resultatsidan. I koden nedan har jag klistrat in json-koden för frågan till apiet och sparat den i variablen “bodytext” och jag har sparat URL:en till api:et i variabeln “apiurl”. Notera att jag denna gång har valt “csv” som format under “response”.</p>
+<pre class="r"><code>library(jsonlite)
+library(httr)
+library(tidyverse)
+library(janitor)
+
+
+
+apiurl &lt;-
+  &quot;http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy&quot;
+
+bodytxt0 &lt;- &#39;{
+&quot;query&quot;: [
+{
+  &quot;code&quot;: &quot;Region&quot;,
+  &quot;selection&quot;: {
+  &quot;filter&quot;: &quot;vs:RegionKommun07&quot;,
+  &quot;values&quot;: [
+  &quot;0561&quot;,
+  &quot;0562&quot;,
+  &quot;0563&quot;
+  ]
+  }
+},
+  {
+  &quot;code&quot;: &quot;Civilstand&quot;,
+  &quot;selection&quot;: {
+  &quot;filter&quot;: &quot;item&quot;,
+  &quot;values&quot;: [
+  &quot;OG&quot;,
+  &quot;G&quot;,
+  &quot;SK&quot;,
+  &quot;ÄNKL&quot;
+  ]
+  }
+  },
+  {
+  &quot;code&quot;: &quot;Alder&quot;,
+  &quot;selection&quot;: {
+  &quot;filter&quot;: &quot;agg:Ålder10år&quot;,
+  &quot;values&quot;: [
+  &quot;-4&quot;,
+  &quot;5-14&quot;,
+  &quot;15-24&quot;,
+  &quot;25-34&quot;,
+  &quot;35-44&quot;
+  ]
+  }
+  },
+  {
+  &quot;code&quot;: &quot;Kon&quot;,
+  &quot;selection&quot;: {
+  &quot;filter&quot;: &quot;item&quot;,
+  &quot;values&quot;: [
+  &quot;1&quot;,
+  &quot;2&quot;
+  ]
+  }
+  },
+  {
+  &quot;code&quot;: &quot;ContentsCode&quot;,
+  &quot;selection&quot;: {
+  &quot;filter&quot;: &quot;item&quot;,
+  &quot;values&quot;: [
+  &quot;BE0101N1&quot;
+  ]
+  }
+  },
+  {
+  &quot;code&quot;: &quot;Tid&quot;,
+  &quot;selection&quot;: {
+  &quot;filter&quot;: &quot;item&quot;,
+  &quot;values&quot;: [
+  &quot;2014&quot;,
+  &quot;2015&quot;,
+  &quot;2016&quot;,
+  &quot;2017&quot;
+  ]
+  }
+  }
+  ],
+  &quot;response&quot;: {
+  &quot;format&quot;: &quot;csv&quot;
+  }
+  }&#39;</code></pre>
+<p>I nästa steg laddar jag hem data och sparar i dataframen df:</p>
+<pre class="r"><code>  bodytxt &lt;- jsonlite::fromJSON(bodytxt0,
+                                simplifyVector = FALSE,
+                                simplifyDataFrame = FALSE)
+  
+  req &lt;- POST(apiurl,
+              body = bodytxt, encode = &quot;json&quot;, verbose())</code></pre>
+<pre class="r"><code>  stop_for_status(req)
+  
+  
+  df &lt;- content(req)</code></pre>
+<p>Nu har jag data sparat i en dataframe, men dataframen har en massa konstiga attribut som jag vill bli av med. Eftersom kolumnnamnen försvinner när jag raderar attributen, så sparar jag ner kolumnnamen i variablen “namn” innan jag raderar attributen genom att sätta “attributes(df) &lt;- NULL”. Att radera attributen gör också att dataframen görs om till en list. Jag återställer därefter kolumnnamnen och återskapar en dataframe med as_tibble(df).</p>
+<p>Eftersom kolumnnamnen från SCB kan innehålla flera ord och svenska tecken, så använder jag mig av paketet janitor, vilket har en funktion som heter clean_names, vilket skapar variabelnamn som följer R:s standard.</p>
+<pre class="r"><code>  namn &lt;- names(df)
+  attributes(df) &lt;- NULL
+  names(df) &lt;- namn
+  df &lt;- as_tibble(df)
+  df &lt;- janitor::clean_names(df)
+  
+  head(df)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+##   region          civilstand alder    kon    folkmangd_2014 folkmangd_2015
+##   &lt;chr&gt;           &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;           &lt;int&gt;          &lt;int&gt;
+## 1 0561 Åtvidaberg ogifta     0-4 år   män               273            297
+## 2 0561 Åtvidaberg ogifta     0-4 år   kvinn~            275            293
+## 3 0561 Åtvidaberg ogifta     5-14 år  män               618            618
+## 4 0561 Åtvidaberg ogifta     5-14 år  kvinn~            641            629
+## 5 0561 Åtvidaberg ogifta     15-24 år män               696            689
+## 6 0561 Åtvidaberg ogifta     15-24 år kvinn~            635            626
+## # ... with 2 more variables: folkmangd_2016 &lt;int&gt;, folkmangd_2017 &lt;int&gt;</code></pre>
+<p>Resultatet ser ganska ok ut, men befolkningen för varje årtal ligger i en egen kolumn. Jag vill helst att alla årtal ska ligga i en egen kolumn. Paketet tidyr har en funktion som heter “gather” som kan användas för att omformatera tabellen som jag vill ha den. Jag vill dessutom att kommunkoderna och kommunnamnen ska stå i varsin kolumn. Detta gör jag med hjälp av “sepatate”-funktionen i tidyr:</p>
+<pre class="r"><code>  df %&gt;%
+    gather(aar, value, folkmangd_2014:folkmangd_2017) %&gt;%
+    mutate(aar = str_remove_all(aar, &quot;folkmangd_&quot;)) %&gt;%
+    mutate(aar = as.integer(aar)) %&gt;%
+    separate(
+      region,
+      c(&quot;kom_kod&quot;, &quot;kom_namn&quot;),
+      sep = &quot; &quot;,
+      extra = &quot;merge&quot;,
+      remove = TRUE
+    )</code></pre>
+<pre><code>## # A tibble: 480 x 7
+##    kom_kod kom_namn   civilstand alder    kon       aar value
+##    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;int&gt;
+##  1 0561    Åtvidaberg ogifta     0-4 år   män      2014   273
+##  2 0561    Åtvidaberg ogifta     0-4 år   kvinnor  2014   275
+##  3 0561    Åtvidaberg ogifta     5-14 år  män      2014   618
+##  4 0561    Åtvidaberg ogifta     5-14 år  kvinnor  2014   641
+##  5 0561    Åtvidaberg ogifta     15-24 år män      2014   696
+##  6 0561    Åtvidaberg ogifta     15-24 år kvinnor  2014   635
+##  7 0561    Åtvidaberg ogifta     25-34 år män      2014   397
+##  8 0561    Åtvidaberg ogifta     25-34 år kvinnor  2014   277
+##  9 0561    Åtvidaberg ogifta     35-44 år män      2014   320
+## 10 0561    Åtvidaberg ogifta     35-44 år kvinnor  2014   227
+## # ... with 470 more rows</code></pre>
+<p>Nu ser tabellen ut om jag vill ha den!</p>
+<p>Eftersom årtalen nästan alltid finns i den sista listan som ingår i variabeln “bodytext”, så går det att göra en mera generell lösning enligt nedan:</p>
+<pre class="r"><code>  index &lt;- length(bodytxt$query)
+  
+  vardevar &lt;- length(bodytxt[[&quot;query&quot;]][[index]][[&quot;selection&quot;]][[&quot;values&quot;]]) - 1
+  
+  df %&gt;% 
+    gather(aar, value, (ncol(.)-vardevar):ncol(.))</code></pre>
+<pre><code>## # A tibble: 480 x 6
+##    region          civilstand alder    kon     aar            value
+##    &lt;chr&gt;           &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;chr&gt;          &lt;int&gt;
+##  1 0561 Åtvidaberg ogifta     0-4 år   män     folkmangd_2014   273
+##  2 0561 Åtvidaberg ogifta     0-4 år   kvinnor folkmangd_2014   275
+##  3 0561 Åtvidaberg ogifta     5-14 år  män     folkmangd_2014   618
+##  4 0561 Åtvidaberg ogifta     5-14 år  kvinnor folkmangd_2014   641
+##  5 0561 Åtvidaberg ogifta     15-24 år män     folkmangd_2014   696
+##  6 0561 Åtvidaberg ogifta     15-24 år kvinnor folkmangd_2014   635
+##  7 0561 Åtvidaberg ogifta     25-34 år män     folkmangd_2014   397
+##  8 0561 Åtvidaberg ogifta     25-34 år kvinnor folkmangd_2014   277
+##  9 0561 Åtvidaberg ogifta     35-44 år män     folkmangd_2014   320
+## 10 0561 Åtvidaberg ogifta     35-44 år kvinnor folkmangd_2014   227
+## # ... with 470 more rows</code></pre>
