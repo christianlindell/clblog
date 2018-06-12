@@ -81,7 +81,7 @@ bodytxt <- '{
 
 Nu är det dags att ladda hem tabellen från SCB genom att anropa SCB:s api med hjälp av httr:
 
-```{r, message=F,  warning=FALSE, echo=FALSE}
+```{r, message=F,  warning=FALSE}
 library(jsonlite)
 library(httr)
 library(tidyverse)
