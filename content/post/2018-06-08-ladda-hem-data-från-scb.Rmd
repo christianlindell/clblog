@@ -12,7 +12,7 @@ slug: ladda-hem-data-från-scb
 
 När jag började lära mig R för ett antal år sedan så var något av det krångligaste att läsa in externa data för att få något att jobba med. Numera är det betydligt enklare än det var för åtta - nio år sedan då det ständiga rådet var att spara data som en textfil innan man läste in den i R.
 
-Ett av mina favoritverktyg för att ladda hem SCB-data är ett paket till R som heter pxweb och kan installeras från CRAN. Det är inte begränsat bara till SCB, utan kan även läsa in data från den norska och den finska statistikmyndigheten, Konjunkturinstitutet, Folkhälsomyndigheten m.fl. myndigheter.
+Ett av mina favoritverktyg för att ladda hem SCB-data är ett paket till R som heter pxweb och kan installeras från CRAN. Det är inte begränsat bara till SCB, utan kan även läsa in data från den norska och den finska statistikmyndigheten, Konjunkturinstitutet, Folkhälsomyndigheten m.fl. myndigheter. En stor fördel med pxweb är att det kringgår SCB:s begränsning på att man kan ladda hem högst 50 000 celler genom att frågor med för stora uttag automatiskt splittas upp i mindre delar.
 
 Så här får man upp en meny där man kan välja tema och variabler från SCB:s öppna databas:
   
