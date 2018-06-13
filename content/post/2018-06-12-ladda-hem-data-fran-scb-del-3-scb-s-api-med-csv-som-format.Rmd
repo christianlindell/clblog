@@ -1,13 +1,13 @@
 ---
-title: Ladda hem data från SCB del 3 - SCB:s api med csv som format
+title: Ladda hem data från SCB med R del 3 - SCB:s api med csv som format
 author: Christian Lindell
 date: '2018-06-12'
-slug: ladda-hem-data-fran-scb-del-3-scb-s-api-med-csv-som-format
 categories:
   - R
 tags:
   - API
   - SCB
+slug: ladda-hem-data-fran-scb-del-3-scb-s-api-med-csv-som-format
 ---
 
 I förra inlägget visade jag hur man laddar hem data från SCB med json som returformat. Ett alternativ är att istället ladda hem data som csv. Vinsten med det är att jag får med namn i klartext och inte bara koder. För regioner får jag alltså med kommunnamnen och inte bara kommunkod. Nackdelen är att det blir lite besvärligare att få en bra tabellstruktur.

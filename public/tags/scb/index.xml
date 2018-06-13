@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>Ladda hem data från SCB del 3 - SCB:s api med csv som format</title>
+      <title>Ladda hem data från SCB med R del 3 - SCB:s api med csv som format</title>
       <link>/2018/06/12/ladda-hem-data-fran-scb-del-3-scb-s-api-med-csv-som-format/</link>
       <pubDate>Tue, 12 Jun 2018 00:00:00 +0000</pubDate>
       
@@ -22,7 +22,7 @@ Den här gången har jag valt plocka värden ur alla dimensioner i SCB:s befolkn
     </item>
     
     <item>
-      <title>Ladda hem data från SCB del 2 - SCB:s api med json som format</title>
+      <title>Ladda hem data från SCB med R del 2 - SCB:s api med json som format</title>
       <link>/2018/06/10/ladda-hem-data-fr%C3%A5n-scb-del-2-anv%C3%A4nda-scb-s-api/</link>
       <pubDate>Sun, 10 Jun 2018 00:00:00 +0000</pubDate>
       
@@ -32,7 +32,7 @@ Men varför krångla med att använda SCB:s API när pxweb redan finns? Det finn
     </item>
     
     <item>
-      <title>Ladda hem data från SCB del 1 -  pxweb</title>
+      <title>Ladda hem data från SCB med R del 1 -  pxweb</title>
       <link>/2018/06/08/ladda-hem-data-fr%C3%A5n-scb/</link>
       <pubDate>Fri, 08 Jun 2018 00:00:00 +0000</pubDate>
       
