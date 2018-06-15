@@ -1,0 +1,198 @@
+---
+title: Hämta platsannonsdata från Arbetsförmedlingen med R
+author: Christian Lindell
+date: '2018-06-15'
+categories:
+  - R
+tags:
+  - AF
+  - API
+slug: hämta-platsannonsdata-från-arbetsförmedlingen-med-r
+---
+
+
+
+<p>Arbetsförmedlingens platsbank har ett <a href="https://www.arbetsformedlingen.se/download/18.40fa4e7b159ff029331706ca/1486976282357/teknisk-beskrivning-lediga-jobb.pdf">api</a> som gör att man relativt enkelt kan ladda hem annonser för bearbetning i R.</p>
+<p>I det här inlägget beskriver jag hur jag gått tillväga för att ladda hem platsannonser som jag sedan använt för att göra en <a href="http://filer.skane.com/textanalys_platsannonser/data_it/Efterfragan_data_och_it.html">textanalys</a> av vilka kompetenser som arbetsgivare efterfrågar.</p>
+<p>Med införandet av GDPR följer ett eventuellt problem. Platsannonserna innehåller persondata och rättsläget är osäkert vad beträffar rätten att lagra personuppgifter. För säkerhets skull så börjar jag därför med att definiera en funktion som rensar bort alla meningar i löptext vilka innehåller telefonnummer eller mailadresser. Det innebär att i stort sett samtliga personuppgifter försvinner.</p>
+<pre class="r"><code># Rensar bort personuppgifter från löptext genom att radera alla meningar
+# som innehåller telefonnr eller mailadresser
+frensa_gdpr &lt;- function(txt) {
+  library(tidyverse)
+  library(stringr)
+  reg_expr &lt;-
+    &quot;(?&lt;=[•\\.\\:\\*\\-\\!\\?])[^[\\.\\:\\•\\*\\-\\!\\?]]+([\\w\\d\\.\\-]{2,20}\\@[\\d\\w\\.]{2,20}\\.[\\w]{2,3}|[\\w\\d\\-_]{2,20}\\@[\\d\\w]{2,20}|[\\d\\s\\+\\-\\(\\)]{11,20}|kontakta|Kontakta|contact|Contact)+&quot;
+  
+  antal &lt;- str_count(txt, reg_expr)
+  max_antal &lt;- max(antal)
+  
+  for (i in 1:max_antal) {
+    txt &lt;- str_remove_all(txt, reg_expr)
+  }
+  return(txt)
+}</code></pre>
+<p>Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda hem annonstexterna. Funktionen nedan laddar hem metadata för alla aktuella platsannoner för ett visst län och ett visst yrkesområde. Om man vill ladda hem data för hela riket så anger man län som en tom sträng. Län anges genom att funktionsargumentet lan sätt till länsnumret (det är de vanliga länsnumren som gäller, Stockholm är lika med 01, SKåne med 12 etc.). En viktig sak man inte får missa och inte framgår av AF:s dokumentation är att språk MÅSTE anges till svenska i GET anropet till servern, dvs “add_headers(”Accept-Language&quot; = “sv”)“. I annat fall returneras ett felmeddelande.</p>
+<pre class="r"><code>  library(tidyverse)
+  library(rvest)
+  library(xml2)
+  library(httr)
+  library(RCurl)
+  library(jsonlite)
+  library(purrr)
+
+
+
+
+ # Hämta annonsid från AF
+  fannonsid &lt;- function(lan, yrkesomr) {
+    # Skapa URL för att anropa AF:s API
+    annonsyrkesomr_url &lt;-
+      paste0(
+        &quot;http://api.arbetsformedlingen.se/af/v0&quot;,
+        &quot;/platsannonser/matchning?lanid=&quot;,
+        lan,
+        &quot;&amp;yrkesomradeid=&quot;,
+        yrkesomr,
+        &quot;&amp;antalrader=10000&quot;
+      )
+    
+    # Hämta lista på alla platsannonser yrkesområdet för valt län
+    lannonseryrkesomr = content(GET(annonsyrkesomr_url,
+                                    config =
+                                      (
+                                        add_headers(&quot;Accept-Language&quot; = &quot;sv&quot;)
+                                      )))
+    
+    # Extrahera annonsid
+    # an_id &lt;-
+    #   simplify(purrr::transpose(lannonseryrkesomr$matchningslista$matchningdata)$annonsid)
+    
+    return(lannonseryrkesomr)
+  }</code></pre>
+<p>Nu anropar vi fannonsid med Skåne (lan = 3) och yrken inom data/IT (yrkesomr = 3) som argument. Som retur för vi en lista med metadata för varje annons. Ur denna lista extraherar vi unika annonsid.</p>
+<pre class="r"><code># Extrahera annonsid
+lannonseryrkesomr &lt;- fannonsid(lan = 12, yrkesomr = 3)
+
+an_id &lt;-
+  simplify(purrr::transpose(lannonseryrkesomr$matchningslista$matchningdata)$annonsid)</code></pre>
+<p>Nu har vi en vektor med unika annonsid som vi kan skicka in i en funktion som hämtar de fulla annonstexterna. Dessvärre är den lista med annonser som vi får i retur från servern ganska komplicerat vilket fodrar en del bearbetning, se kommentarer i koden nedan. Eftersom det kan ta lång tid att köra funktionen så har jag även lagt till en progress bar (koden till den har jag lånat av R-gurun Bob Rudis). Notera att GDPR rensning är defalultval i funktionsanropet. Vill du leva farligt kan den sättas till FALSE, men det sker på eget ansvar…</p>
+<pre class="r"><code>  # Function för att hämta annons med annonsid som input. Pb styr hur många iterationer som
+  # ska göras och bestämmer längden på progress bar
+  fannonstext &lt;- function(annonsid = &quot;111&quot;, .pb = pb, rensa_gdpr = TRUE) {    
+# Progressbar kopierad från Bob Rudis
+    if ((!is.null(.pb)) &amp;&amp;
+        inherits(.pb, &quot;Progress&quot;) &amp;&amp; (.pb$i &lt; .pb$n))
+      .pb$tick()$print()
+    
+    # Hämta annonserna
+    annons_url &lt;- paste0(&quot;http://api.arbetsformedlingen.se/af/v0&quot;,
+                         &quot;/platsannonser/&quot;,
+                         annonsid)
+    
+    # Notera att språk måste anges i GET-anropet
+    lannons &lt;- try(content(GET(annons_url,
+                               config =
+                                 (
+                                   add_headers(&quot;Accept-Language&quot; = &quot;sv&quot;)
+                                 )),
+                           simplifyDataFrame = TRUE))
+    
+    if (inherits(lannons, &quot;try-error&quot;)) {
+      # Om fel, returnera NULL
+      return(NULL)
+    }
+    if (names(lannons)[1] == &quot;node&quot;) {
+      # Om lannons inte innehåller data, returnera NULL
+      return(NULL)
+    }
+    
+    # Kontaktuppgifter lagras som en dataframe i listan som hämtas från AF. Det innebär
+    # att kontaktuppgifterna behöver göras om till en string för att kunna sparas
+    
+    kontakt &lt;- &quot;&quot;
+    
+    # Om det finns kontaktuppgifter angivna i annonsen
+    if (is.data.frame(lannons$platsannons$arbetsplats$kontaktpersonlista$kontaktpersondata)) {
+      dfkontaktpersondata &lt;-
+        lannons$platsannons$arbetsplats$kontaktpersonlista$kontaktpersondata
+      
+      kontakt &lt;- &quot;&quot;
+      for (i in 1:nrow(dfkontaktpersondata)) {
+        ktmp &lt;- unlist(dfkontaktpersondata[i, ], use.names = FALSE)
+        ktmp &lt;- ktmp[!is.na(ktmp)]
+        kontakt &lt;-
+          paste0(kontakt, paste0(ktmp, collapse = &quot;, &quot;), &quot;; &quot;)
+      }
+      
+    }
+    lannons$platsannons$arbetsplats$kontaktpersonlista &lt;- NULL
+    
+    # Körkort lagras som en dataframe i listan som hämtas från AF. Det innebär
+    # att körkortsuppgifterna behöver göras om till en string för att kunna lagras
+    
+    korkort &lt;- &quot;&quot;
+    
+    if (is.data.frame(lannons$platsannons$krav$korkortslista) ||
+        is.list(lannons$platsannons$krav$korkortslista)) {
+      korkort &lt;-
+        unlist(unlist(lannons[[&quot;platsannons&quot;]][[&quot;krav&quot;]][[&quot;korkortslista&quot;]][[&quot;korkortstyp&quot;]]),
+               use.names = F)
+      
+    }
+    
+    lannons$platsannons$krav$korkortslista &lt;- NULL
+    
+    # flatten_df från purrr-paketet för om listan med annonsdata till en dataframe
+    dftemp &lt;- flatten_df(lannons$platsannons)
+    # lägg in strängen med kontaktpersoner i dftemp$kontaktdata
+    dftemp$kontaktdata &lt;- kontakt
+    dftemp$korkortslista &lt;- paste(korkort, collapse = &quot;  &quot;)
+    dftemp$antalplatserVisa &lt;- as.integer(dftemp$antalplatserVisa)
+    dftemp$antal_platser &lt;- as.integer(dftemp$antal_platser)
+    dftemp$yrkesid &lt;- as.character(dftemp$yrkesid)
+    # Gör om kommunkoderna från integer till character
+    dftemp$kommunkod &lt;- as.character(dftemp$kommunkod)
+    # Lägg på en inledande &quot;0&quot;:a på de kommunkoder som bara är tre tecken långa
+    dftemp$kommunkod &lt;- ifelse(nchar(dftemp$kommunkod) == 3,
+                               paste0(&quot;0&quot;, dftemp$kommunkod),
+                               dftemp$kommunkod)
+    
+    # Eftersom rättsläget är osäkert vad beträffar rätten att lagra personuppgifter
+    # så kan vi välja att plocka bort fältet med kontaktpersoner och radera alla 
+    # meningar som innehåller ett telefonnummer eller en mailadress.
+
+    if (rensa_gdpr == TRUE) {
+      dftemp$kontaktdata &lt;- NA
+      dftemp$annonstext &lt;- frensa_gdpr(dftemp$annonstext)
+    }
+    
+    return(dftemp)
+  }</code></pre>
+<p>Nu är det dags att hämta hem annonstexterna med funktionen fannonstext() som vi definierat ovan. I stället för att använda mig av en loop för att hämta hem alla annonserna med de annonsid som jag hämtat hem tidigare så använder jag funktionen map_df från purrr-paketet. Map_df går igenom vektorn med annonsid och för varje annonsid anropas funktionen fannonstext. När alla annonstexter hämtas hem sammanfogas alla de dataframes som returnerats - en för varje annons - ihop till en stor stor dataframe som innehåller alla annonser.</p>
+<pre class="r"><code># För att snabba upp skriptet så hämtar vi bara hem de
+# 20 första annonserna
+an_id &lt;- an_id[1:20]
+pb &lt;- progress_estimated(length(an_id))
+dfannons &lt;-
+purrr::map_df(an_id, fannonstext, .pb = pb, rensa_gdpr = TRUE)
+
+head(dfannons)</code></pre>
+<pre><code>## # A tibble: 6 x 36
+##   annonsid platsannonsUrl  annonsrubrik annonstext  yrkesbenamning yrkesid
+##   &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;        &lt;chr&gt;       &lt;chr&gt;          &lt;chr&gt;  
+## 1 7772838  https://www.ar~ Vad är vack~ &quot;Vacker ko~ Systemutveckl~ 2419   
+## 2 7772615  https://www.ar~ Talented Cl~ &quot;Are you a~ Mjukvaruutvec~ 80     
+## 3 7772578  https://www.ar~ Portfolio M~ &quot;Telenor I~ Projektledare~ 5388   
+## 4 7772394  https://www.ar~ Junior inge~ &quot;Är du pre~ Systemutveckl~ 2419   
+## 5 7772322  https://www.ar~ Frontend-ut~ &quot;Tittar du~ Systemutveckl~ 2419   
+## 6 7772071  https://www.ar~ Driven stud~ &quot;Vill du a~ Systemutveckl~ 2419   
+## # ... with 30 more variables: publiceraddatum &lt;chr&gt;, antal_platser &lt;int&gt;,
+## #   kommunnamn &lt;chr&gt;, kommunkod &lt;chr&gt;, antalplatserVisa &lt;int&gt;,
+## #   anstallningstyp &lt;chr&gt;, varaktighet &lt;chr&gt;, arbetstid &lt;chr&gt;,
+## #   arbetstidvaraktighet &lt;chr&gt;, lonetyp &lt;chr&gt;, loneform &lt;chr&gt;,
+## #   webbplats &lt;chr&gt;, sista_ansokningsdag &lt;chr&gt;, ovrigt_om_ansokan &lt;chr&gt;,
+## #   arbetsplatsnamn &lt;chr&gt;, postnummer &lt;chr&gt;, postadress &lt;chr&gt;,
+## #   postort &lt;chr&gt;, postland &lt;chr&gt;, land &lt;chr&gt;, besoksadress &lt;chr&gt;,
+## #   logotypurl &lt;chr&gt;, hemsida &lt;chr&gt;, egenbil &lt;lgl&gt;, kontaktdata &lt;lgl&gt;,
+## #   korkortslista &lt;chr&gt;, referens &lt;chr&gt;, epostadress &lt;chr&gt;,
+## #   besoksort &lt;chr&gt;, telefonnummer &lt;chr&gt;</code></pre>
