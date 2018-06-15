@@ -50,10 +50,7 @@ Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda he
 
 ```{r}
   library(tidyverse)
-  library(rvest)
-  library(xml2)
   library(httr)
-  library(RCurl)
   library(jsonlite)
   library(purrr)
 
