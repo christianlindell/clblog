@@ -14,7 +14,11 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 
-Om man får punktkoordinater är de ganska ofta i koordinatsystemet WGS84, vilket är det koordinatsystem som Google Map och många GPS:er använder. Samtidig ska punkterna ofta läggas ut på en karta som är i den svenska standardprojektionen SWEREF99. Man måste alltså ändra projektion för punkterna så att de också anges i SWEREF99. Så här kan man göra:
+Om man får punktkoordinater är de ganska ofta i koordinatsystemet WGS84, vilket är det koordinatsystem som Google Map och många GPS:er använder. Samtidig ska punkterna ofta läggas ut på en karta som är i den svenska standardprojektionen SWEREF99. Man måste alltså ändra projektion för punkterna så att de också anges i SWEREF99. 
+
+Koordinater anges med hjälp av en CRS-sträng eller en CRS-kod. Info om vilken CRS-sträng som motsvarar en viss projektion kan man hitta på bland annat [http://spatialreference.org/](http://spatialreference.org/). WGS84 motsvaras till exempel av CRS-strängen "+proj=longlat +datum=WGS84".
+
+Så här kan man göra för att översätta punktkoordinater till olika koordinatsystem:
 
 ```{r, eval=FALSE}
 library(spatial)
