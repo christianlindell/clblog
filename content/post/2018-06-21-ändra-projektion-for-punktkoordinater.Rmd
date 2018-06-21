@@ -16,11 +16,9 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 Om man får punktkoordinater är de ganska ofta i koordinatsystemet WGS84, vilket är det koordinatsystem som Google Map och många GPS:er använder. Samtidig ska punkterna ofta läggas ut på en karta som är i den svenska standardprojektionen SWEREF99. Man måste alltså ändra projektion för punkterna så att de också anges i SWEREF99. Så här kan man göra:
 
-```{r, echo=FALSE}
-library(readxl)
-library(spatial, quietly = T)
-library(srgdal, quietly = T)
-library(writexl)
+```{r, eval=FALSE}
+library(spatial)
+library(srgdal)
 library(tidyverse)
 
 
@@ -45,14 +43,23 @@ dfadresser <- tibble::tribble(
 SWEREF99TM <- "+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
 
 # Skapa data frame med koordinater i  SWEREF99
-# Om det blir fel, kolla så att jag inte kastat om longitud och latitud...
 coordinates(dfadresser) = c("lon", "lat")
 proj4string(dfadresser) = CRS("+proj=longlat +datum=WGS84")
 koordSWEREF <- spTransform(dfadresser, CRS(SWEREF99TM))
 dfadressSWEREF <- as_data_frame(koordSWEREF)
 
-# Spara koordinaterna i SWEREF99 i en excelfil
-# write_xlsx(dfadressSWEREF, path = "swereftest.xlsx")
+head(dfadressSWEREF)
+
+
+# A tibble: 6 x 2
+#       lon      lat
+#     <dbl>    <dbl>
+# 1 650874. 6632770.
+# 2 657936. 6624358.
+# 3 612861. 6642145.
+# 4 660454. 6648197.
+# 5 628523. 6657526.
+# 6 654477. 6650757.
 ```
 
 
@@ -63,6 +70,10 @@ Nästa steg kan vara att koppla koordinaterna till vilket län, kommun och täto
 # tätort och län varje punkt ligger i kan man använda raster-paketets
 # extract()-funktion. Koden, inkl. fria shape-filer från lantmäteriet
 # kan laddas hem från https://github.com/christianlindell/demokoordinat
+
+library(spatial)
+library(rgdal)
+library(tidyverse)
 
 path <- getwd()
 
@@ -90,6 +101,16 @@ dfdata_tatort1 <- dfdata_tatort %>%
 
 dffinal <- merge(x=dfdata_tatort1[,c("concat","KATEGORI", "NAMN1")], y=dfdata_kommun1, by="concat")
 dffinal <- dffinal %>% select(lon, lat, kommun=KOMMUNNAMN, lan=LANSNAMN, tatort=KATEGORI, tatort.namn=NAMN1)
+
+head(dffinal)
+
+#        lon     lat  kommun         lan tatort tatort.namn
+# 1 641195.6 6602861    Håbo Uppsala län Tätort        Råby
+# 2 642982.7 6606165    Håbo Uppsala län Tätort      Bålsta
+# 3 657879.6 6624288 Knivsta Uppsala län Tätort     Knivsta
+# 4 657936.1 6624358 Knivsta Uppsala län Tätort     Knivsta
+# 5 650874.0 6632770 Uppsala Uppsala län Tätort       Sävja
+# 6 647413.9 6636619 Uppsala Uppsala län Tätort     Uppsala
 
 
 
