@@ -1,0 +1,99 @@
+---
+title: Ändra projektion för punktkoordinater
+author: Christian Lindell
+date: '2018-06-21'
+slug: ändra-projektion-for-punktkoordinater
+categories:
+  - R
+tags:
+  - GIS
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+
+Om man får punktkoordinater är de ganska ofta i koordinatsystemet WGS84, vilket är det koordinatsystem som Google Map och många GPS:er använder. Samtidig ska punkterna ofta läggas ut på en karta som är i den svenska standardprojektionen SWEREF99. Man måste alltså ändra projektion för punkterna så att de också anges i SWEREF99. Så här kan man göra:
+
+```{r, echo=FALSE}
+library(readxl)
+library(spatial, quietly = T)
+library(srgdal, quietly = T)
+library(writexl)
+library(tidyverse)
+
+
+# Läs in koordinater i WGS84-format (det format som t.ex. används av Google-maps)
+
+dfadresser <- tibble::tribble(
+  ~lat,       ~lon,
+  59.8051214,  17.6896049,
+  59.7270467,  17.8089790,
+  59.9013531,  17.0176058,
+  59.9398745,  17.8720678,
+  60.0347762,  17.3069286,
+  59.9651196,  17.7671378,
+  59.8408899,  17.6307211,
+  59.5692486,  17.5310160,
+  59.5402218,  17.4972200,
+  59.7264353,  17.8079230
+)
+
+
+# Projection string for SWEREF99
+SWEREF99TM <- "+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+
+# Skapa data frame med koordinater i  SWEREF99
+# Om det blir fel, kolla så att jag inte kastat om longitud och latitud...
+coordinates(dfadresser) = c("lon", "lat")
+proj4string(dfadresser) = CRS("+proj=longlat +datum=WGS84")
+koordSWEREF <- spTransform(dfadresser, CRS(SWEREF99TM))
+dfadressSWEREF <- as_data_frame(koordSWEREF)
+
+# Spara koordinaterna i SWEREF99 i en excelfil
+# write_xlsx(dfadressSWEREF, path = "swereftest.xlsx")
+```
+
+
+Nästa steg kan vara att koppla koordinaterna till vilket län, kommun och tätort de tillhör. Det kan göras med  "extract"-funktionen från "raster"-paketet (tack Björn Schulte-Herbrüggen från Region Uppsala för koden!):
+
+```{r, eval=FALSE}
+# Vill man lägga på information från shape-filen om vilken kommun,
+# tätort och län varje punkt ligger i kan man använda raster-paketets
+# extract()-funktion. Koden, inkl. fria shape-filer från lantmäteriet
+# kan laddas hem från https://github.com/christianlindell/demokoordinat
+
+path <- getwd()
+
+kommun <- readOGR(paste0(path, "/", "karta"),"ak_riks")
+tatort <- readOGR(paste0(path, "/", "karta"), "mb_riks")
+
+# extract data
+dfdata_kommun <- data.frame(coordinates(dfadressSWEREF),
+                          raster::extract(kommun, dfadressSWEREF))
+
+dfdata_tatort <- data.frame(coordinates(dfadressSWEREF),
+                          raster::extract(tatort, dfadressSWEREF))
+
+# merge dfs
+
+dfdata_kommun1 <- dfdata_kommun %>% 
+  select(lon, lat, LANSNAMN, KOMMUNNAMN) %>% 
+  mutate(concat = paste(lat,lon,sep="_")) %>% 
+  distinct()
+
+dfdata_tatort1 <- dfdata_tatort %>% 
+  select(lon, lat, KATEGORI, NAMN1) %>% 
+  mutate(concat = paste(lat,lon,sep="_")) %>%
+  distinct()
+
+dffinal <- merge(x=dfdata_tatort1[,c("concat","KATEGORI", "NAMN1")], y=dfdata_kommun1, by="concat")
+dffinal <- dffinal %>% select(lon, lat, kommun=KOMMUNNAMN, lan=LANSNAMN, tatort=KATEGORI, tatort.namn=NAMN1)
+
+
+
+```
+
+
+Koden och shapefilerna (fria filer från Lantmäteriet) kan laddas ned från [GitHub](https://github.com/christianlindell/demokoordinat)

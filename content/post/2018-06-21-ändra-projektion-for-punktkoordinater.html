@@ -1,0 +1,98 @@
+---
+title: Ändra projektion för punktkoordinater
+author: Christian Lindell
+date: '2018-06-21'
+slug: ändra-projektion-for-punktkoordinater
+categories:
+  - R
+tags:
+  - GIS
+---
+
+
+
+<p>Om man får punktkoordinater är de ganska ofta i koordinatsystemet WGS84, vilket är det koordinatsystem som Google Map och många GPS:er använder. Samtidig ska punkterna ofta läggas ut på en karta som är i den svenska standardprojektionen SWEREF99. Man måste alltså ändra projektion för punkterna så att de också anges i SWEREF99. Så här kan man göra:</p>
+<pre class="r"><code>library(readxl)
+library(spatial)
+library(rgdal)</code></pre>
+<pre><code>## Loading required package: sp</code></pre>
+<pre><code>## rgdal: version: 1.2-20, (SVN revision 725)
+##  Geospatial Data Abstraction Library extensions to R successfully loaded
+##  Loaded GDAL runtime: GDAL 2.2.3, released 2017/11/20
+##  Path to GDAL shared files: C:/Users/chris/Documents/R/win-library/3.4/rgdal/gdal
+##  GDAL binary built with GEOS: TRUE 
+##  Loaded PROJ.4 runtime: Rel. 4.9.3, 15 August 2016, [PJ_VERSION: 493]
+##  Path to PROJ.4 shared files: C:/Users/chris/Documents/R/win-library/3.4/rgdal/proj
+##  Linking to sp version: 1.2-7</code></pre>
+<pre class="r"><code>library(writexl)
+library(tidyverse)</code></pre>
+<pre><code>## -- Attaching packages -------------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## v ggplot2 2.2.1.9000     v purrr   0.2.5     
+## v tibble  1.4.2          v dplyr   0.7.5     
+## v tidyr   0.8.1          v stringr 1.3.1     
+## v readr   1.1.1          v forcats 0.3.0</code></pre>
+<pre><code>## -- Conflicts ----------------------------------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code># Läs in koordinater i WGS84-format (det format som t.ex. används av Google-maps)
+
+dfadresser &lt;- tibble::tribble(
+  ~lat,       ~lon,
+  59.8051214,  17.6896049,
+  59.7270467,  17.8089790,
+  59.9013531,  17.0176058,
+  59.9398745,  17.8720678,
+  60.0347762,  17.3069286,
+  59.9651196,  17.7671378,
+  59.8408899,  17.6307211,
+  59.5692486,  17.5310160,
+  59.5402218,  17.4972200,
+  59.7264353,  17.8079230
+)
+
+
+# Projection string for SWEREF99
+SWEREF99TM &lt;- &quot;+proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs&quot;
+
+# Skapa data frame med koordinater i  SWEREF99
+# Om det blir fel, kolla så att jag inte kastat om longitud och latitud...
+coordinates(dfadresser) = c(&quot;lon&quot;, &quot;lat&quot;)
+proj4string(dfadresser) = CRS(&quot;+proj=longlat +datum=WGS84&quot;)
+koordSWEREF &lt;- spTransform(dfadresser, CRS(SWEREF99TM))
+dfadressSWEREF &lt;- as_data_frame(koordSWEREF)
+
+# Spara koordinaterna i SWEREF99 i en excelfil
+# write_xlsx(dfadressSWEREF, path = &quot;swereftest.xlsx&quot;)</code></pre>
+<p>Nästa steg kan vara att koppla koordinaterna till vilket län, kommun och tätort de tillhör. Det kan göras med “extract”-funktionen från “raster”-paketet (tack Björn Schulte-Herbrüggen från Region Uppsala för koden!):</p>
+<pre class="r"><code># Vill man lägga på information från shape-filen om vilken kommun,
+# tätort och län varje punkt ligger i kan man använda raster-paketets
+# extract()-funktion. Koden, inkl. fria shape-filer från lantmäteriet
+# kan laddas hem från https://github.com/christianlindell/demokoordinat
+
+path &lt;- getwd()
+
+kommun &lt;- readOGR(paste0(path, &quot;/&quot;, &quot;karta&quot;),&quot;ak_riks&quot;)
+tatort &lt;- readOGR(paste0(path, &quot;/&quot;, &quot;karta&quot;), &quot;mb_riks&quot;)
+
+# extract data
+dfdata_kommun &lt;- data.frame(coordinates(dfadressSWEREF),
+                          raster::extract(kommun, dfadressSWEREF))
+
+dfdata_tatort &lt;- data.frame(coordinates(dfadressSWEREF),
+                          raster::extract(tatort, dfadressSWEREF))
+
+# merge dfs
+
+dfdata_kommun1 &lt;- dfdata_kommun %&gt;% 
+  select(lon, lat, LANSNAMN, KOMMUNNAMN) %&gt;% 
+  mutate(concat = paste(lat,lon,sep=&quot;_&quot;)) %&gt;% 
+  distinct()
+
+dfdata_tatort1 &lt;- dfdata_tatort %&gt;% 
+  select(lon, lat, KATEGORI, NAMN1) %&gt;% 
+  mutate(concat = paste(lat,lon,sep=&quot;_&quot;)) %&gt;%
+  distinct()
+
+dffinal &lt;- merge(x=dfdata_tatort1[,c(&quot;concat&quot;,&quot;KATEGORI&quot;, &quot;NAMN1&quot;)], y=dfdata_kommun1, by=&quot;concat&quot;)
+dffinal &lt;- dffinal %&gt;% select(lon, lat, kommun=KOMMUNNAMN, lan=LANSNAMN, tatort=KATEGORI, tatort.namn=NAMN1)</code></pre>
+<p>Koden och shapefilerna (fria filer från Lantmäteriet) kan laddas ned från <a href="https://github.com/christianlindell/demokoordinat">GitHub</a></p>

@@ -31,12 +31,9 @@ frensa_gdpr &lt;- function(txt) {
   }
   return(txt)
 }</code></pre>
-<p>Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda hem annonstexterna. Funktionen nedan laddar hem metadata för alla aktuella platsannoner för ett visst län och ett visst yrkesområde. Om man vill ladda hem data för hela riket så anger man län som en tom sträng. Län anges genom att funktionsargumentet lan sätt till länsnumret (det är de vanliga länsnumren som gäller, Stockholm är lika med 01, SKåne med 12 etc.). En viktig sak man inte får missa och inte framgår av AF:s dokumentation är att språk MÅSTE anges till svenska i GET anropet till servern, dvs “add_headers(”Accept-Language&quot; = “sv”)“. I annat fall returneras ett felmeddelande.</p>
+<p>Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda hem annonstexterna. Funktionen nedan laddar hem metadata för alla aktuella platsannoner för ett visst län och ett visst yrkesområde. Om man vill ladda hem data för hela riket så anger man län som en tom sträng. Län anges genom att funktionsargumentet lan sätt till länsnumret (det är de vanliga länsnumren som gäller, Stockholm är lika med 01, SKåne med 12 etc.). En viktig sak man inte får missa och inte framgår av AF:s dokumentation är att språk MÅSTE anges till svenska i GET anropet till servern, dvs “add_headers(”Accept-Language&quot; = “sv”)&quot;. I annat fall returneras ett felmeddelande.</p>
 <pre class="r"><code>  library(tidyverse)
-  library(rvest)
-  library(xml2)
   library(httr)
-  library(RCurl)
   library(jsonlite)
   library(purrr)
 
@@ -177,22 +174,22 @@ dfannons &lt;-
 purrr::map_df(an_id, fannonstext, .pb = pb, rensa_gdpr = TRUE)
 
 head(dfannons)</code></pre>
-<pre><code>## # A tibble: 6 x 36
+<pre><code>## # A tibble: 6 x 35
 ##   annonsid platsannonsUrl  annonsrubrik annonstext  yrkesbenamning yrkesid
 ##   &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;        &lt;chr&gt;       &lt;chr&gt;          &lt;chr&gt;  
-## 1 7772838  https://www.ar~ Vad är vack~ &quot;Vacker ko~ Systemutveckl~ 2419   
-## 2 7772615  https://www.ar~ Talented Cl~ &quot;Are you a~ Mjukvaruutvec~ 80     
-## 3 7772578  https://www.ar~ Portfolio M~ &quot;Telenor I~ Projektledare~ 5388   
-## 4 7772394  https://www.ar~ Junior inge~ &quot;Är du pre~ Systemutveckl~ 2419   
-## 5 7772322  https://www.ar~ Frontend-ut~ &quot;Tittar du~ Systemutveckl~ 2419   
-## 6 7772071  https://www.ar~ Driven stud~ &quot;Vill du a~ Systemutveckl~ 2419   
-## # ... with 30 more variables: publiceraddatum &lt;chr&gt;, antal_platser &lt;int&gt;,
+## 1 7783666  https://www.ar~ Verksamhets~ &quot;Vellinge ~ IT-samordnare  2915   
+## 2 7783611  https://www.ar~ Vi söker Fu~ &quot;Vill du j~ Mjukvaruutvec~ 80     
+## 3 7783580  https://www.ar~ Mjukvaruutv~ &quot;About Axi~ Mjukvaruutvec~ 80     
+## 4 7783503  https://www.ar~ Systemkonsu~ &quot;Vi är sve~ Systemarkitekt 7601   
+## 5 7783489  https://www.ar~ Service Del~ &quot;E.ON is l~ IT-arkitekt/L~ 6626   
+## 6 7783180  https://www.ar~ AddPro rekr~ &quot;Det går b~ Nätverkstekni~ 5912   
+## # ... with 29 more variables: publiceraddatum &lt;chr&gt;, antal_platser &lt;int&gt;,
 ## #   kommunnamn &lt;chr&gt;, kommunkod &lt;chr&gt;, antalplatserVisa &lt;int&gt;,
 ## #   anstallningstyp &lt;chr&gt;, varaktighet &lt;chr&gt;, arbetstid &lt;chr&gt;,
 ## #   arbetstidvaraktighet &lt;chr&gt;, lonetyp &lt;chr&gt;, loneform &lt;chr&gt;,
-## #   webbplats &lt;chr&gt;, sista_ansokningsdag &lt;chr&gt;, ovrigt_om_ansokan &lt;chr&gt;,
+## #   referens &lt;chr&gt;, webbplats &lt;chr&gt;, epostadress &lt;chr&gt;,
+## #   sista_ansokningsdag &lt;chr&gt;, ovrigt_om_ansokan &lt;chr&gt;,
 ## #   arbetsplatsnamn &lt;chr&gt;, postnummer &lt;chr&gt;, postadress &lt;chr&gt;,
 ## #   postort &lt;chr&gt;, postland &lt;chr&gt;, land &lt;chr&gt;, besoksadress &lt;chr&gt;,
-## #   logotypurl &lt;chr&gt;, hemsida &lt;chr&gt;, egenbil &lt;lgl&gt;, kontaktdata &lt;lgl&gt;,
-## #   korkortslista &lt;chr&gt;, referens &lt;chr&gt;, epostadress &lt;chr&gt;,
-## #   besoksort &lt;chr&gt;, telefonnummer &lt;chr&gt;</code></pre>
+## #   hemsida &lt;chr&gt;, egenbil &lt;lgl&gt;, kontaktdata &lt;lgl&gt;, korkortslista &lt;chr&gt;,
+## #   logotypurl &lt;chr&gt;, besoksort &lt;chr&gt;</code></pre>
