@@ -1,8 +1,8 @@
 ---
 title: Ändra projektion för punktkoordinater
 author: Christian Lindell
-date: '2018-06-21'
-slug: ändra-projektion-for-punktkoordinater
+date: '2018-06-22'
+slug: andra-projektion-for-punktkoordinater
 categories:
   - R
 tags:
@@ -54,6 +54,7 @@ dfadressSWEREF <- as_data_frame(koordSWEREF)
 
 head(dfadressSWEREF)
 
+# Nu är koordinaterna ändrade från WGS84 till SWEREF99
 
 # A tibble: 6 x 2
 #       lon      lat
@@ -72,12 +73,9 @@ Nästa steg kan vara att koppla koordinaterna till vilket län, kommun och täto
 ```{r, eval=FALSE}
 # Vill man lägga på information från shape-filen om vilken kommun,
 # tätort och län varje punkt ligger i kan man använda raster-paketets
-# extract()-funktion. Koden, inkl. fria shape-filer från lantmäteriet
+# extract()-funktion. Koden, inkl. fria shape-filer från Lantmäteriet
 # kan laddas hem från https://github.com/christianlindell/demokoordinat
 
-library(spatial)
-library(rgdal)
-library(tidyverse)
 
 path <- getwd()
 
