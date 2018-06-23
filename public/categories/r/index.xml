@@ -6,10 +6,42 @@
     <description>Recent content in R on Ditt och data</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>sv-se</language>
-    <lastBuildDate>Tue, 12 Jun 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 23 Jun 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Ladda hem data från Danmarks Statistk med R med Dst:s API</title>
+      <link>/2018/06/23/ladda-hem-data-fr%C3%A5n-danmarks-statistk-med-r-med-dst-s-api/</link>
+      <pubDate>Sat, 23 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/06/23/ladda-hem-data-fr%C3%A5n-danmarks-statistk-med-r-med-dst-s-api/</guid>
+      <description>Danmarks Statistik har ett API som kan hittas här. Liksom SCB så har Dst en sida där man kan få hjälp med att bygga JSON-frågan till API:et. Den sidan hittar man här.
+Beroende på vilken typ av fråga man ställer så måste man använda olika URL:er i POST-anropet till Dst:
+Hämta ämnesområden: https://api.statbank.dk/v1/subjectsLista tabeller inom ett ämnesområde: https://api.statbank.dk/v1/tablesHämta metainfo om en tabell: https://api.statbank.dk/v1/tableinfoLadda hem en tabell: https://api.</description>
+    </item>
+    
+    <item>
+      <title>Ändra projektion för punktkoordinater</title>
+      <link>/2018/06/22/andra-projektion-for-punktkoordinater/</link>
+      <pubDate>Fri, 22 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/06/22/andra-projektion-for-punktkoordinater/</guid>
+      <description>Om man får punktkoordinater är de ganska ofta i koordinatsystemet WGS84, vilket är det koordinatsystem som Google Map och många GPS:er använder. Samtidig ska punkterna ofta läggas ut på en karta som är i den svenska standardprojektionen SWEREF99. Man måste alltså ändra projektion för punkterna så att de också anges i SWEREF99.
+Koordinater anges med hjälp av en CRS-sträng eller en CRS-kod. Info om vilken CRS-sträng som motsvarar en viss projektion kan man hitta på bland annat http://spatialreference.</description>
+    </item>
+    
+    <item>
+      <title>Hämta platsannonsdata från Arbetsförmedlingen med R</title>
+      <link>/2018/06/15/h%C3%A4mta-platsannonsdata-fr%C3%A5n-arbetsf%C3%B6rmedlingen-med-r/</link>
+      <pubDate>Fri, 15 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/06/15/h%C3%A4mta-platsannonsdata-fr%C3%A5n-arbetsf%C3%B6rmedlingen-med-r/</guid>
+      <description>Arbetsförmedlingens platsbank har ett api som gör att man relativt enkelt kan ladda hem annonser för bearbetning i R.
+I det här inlägget beskriver jag hur jag gått tillväga för att ladda hem platsannonser som jag sedan använt för att göra en textanalys av vilka kompetenser som arbetsgivare efterfrågar.
+Med införandet av GDPR följer ett eventuellt problem. Platsannonserna innehåller persondata och rättsläget är osäkert vad beträffar rätten att lagra personuppgifter. För säkerhets skull så börjar jag därför med att definiera en funktion som rensar bort alla meningar i löptext vilka innehåller telefonnummer eller mailadresser.</description>
+    </item>
     
     <item>
       <title>Ladda hem data från SCB med R del 3 - SCB:s api med csv som format</title>

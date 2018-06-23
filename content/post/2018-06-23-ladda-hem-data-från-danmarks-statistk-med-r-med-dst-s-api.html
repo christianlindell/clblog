@@ -1,0 +1,193 @@
+---
+title: Ladda hem data från Danmarks Statistk med R med Dst:s API
+author: Christian LIndell
+date: '2018-06-23'
+categories:
+  - R
+tags:
+  - Dst
+  - API
+slug: ladda-hem-data-från-danmarks-statistk-med-r-med-dst-s-api
+---
+
+
+
+<p>Danmarks Statistik har ett API som kan hittas <a href="https://www.dst.dk/da/Statistik/statistikbanken/api">här</a>. Liksom SCB så har Dst en sida där man kan få hjälp med att bygga JSON-frågan till API:et. Den sidan hittar man <a href="https://api.statbank.dk/console#subjects">här</a>.</p>
+<p>Beroende på vilken typ av fråga man ställer så måste man använda olika URL:er i POST-anropet till Dst:</p>
+<ul>
+<li>Hämta ämnesområden: <a href="https://api.statbank.dk/v1/subjects" class="uri">https://api.statbank.dk/v1/subjects</a></li>
+<li>Lista tabeller inom ett ämnesområde: <a href="https://api.statbank.dk/v1/tables" class="uri">https://api.statbank.dk/v1/tables</a></li>
+<li>Hämta metainfo om en tabell: <a href="https://api.statbank.dk/v1/tableinfo" class="uri">https://api.statbank.dk/v1/tableinfo</a></li>
+<li>Ladda hem en tabell: <a href="https://api.statbank.dk/v1/data" class="uri">https://api.statbank.dk/v1/data</a></li>
+</ul>
+<p>Till att börja med kan vi ladda hem en tabell med alla ämnesområden som finns i Danmark Statistiks databas:</p>
+<pre class="r"><code>library(jsonlite)
+library(httr)
+library(magrittr)
+library(tidyr)
+library(purrr)
+library(tibble)
+
+
+bodytxt &lt;- &#39;{
+   &quot;lang&quot;: &quot;en&quot;,
+   &quot;format&quot;: &quot;JSON&quot;
+}&#39;
+
+
+bodytxt_list &lt;- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+  
+req &lt;- POST(&quot;https://api.statbank.dk/v1/subjects&quot;,
+            body = bodytxt_list, encode = &quot;json&quot;, verbose())
+
+stop_for_status(req)
+content(req)
+dfanswer &lt;- fromJSON(content(req))[, 1:4]
+
+
+
+bodytxt &lt;- &#39;{
+  &quot;lang&quot;: &quot;en&quot;,
+  &quot;subjects&quot;: [
+    &quot;02&quot;
+    ],
+  &quot;format&quot;: &quot;JSON&quot;
+}&#39;
+
+
+bodytxt_list &lt;- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+
+req &lt;- POST(&quot;https://api.statbank.dk/v1/tables&quot;,
+            body = bodytxt_list, encode = &quot;json&quot;, verbose())
+
+stop_for_status(req)
+content(req)
+dfanswer &lt;- fromJSON(content(req))
+
+dfanswer &lt;- as_data_frame(dfanswer)
+
+head(dfanswer)
+
+# id     text                                       unit   updated             firstPeriod latestPeriod active variables
+# &lt;chr&gt;  &lt;chr&gt;                                      &lt;chr&gt;  &lt;chr&gt;               &lt;chr&gt;       &lt;chr&gt;        &lt;lgl&gt;  &lt;list&gt;   
+#   1 FOLK1A Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#   2 FOLK1B Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#   3 FOLK1C Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [6]&gt;
+#   4 FOLK1D Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#   5 FOLK1E Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#   6 FOLK2  Population 1. January                      number 2018-02-09T08:00:00 1980        2018         TRUE   &lt;chr [6]&gt;</code></pre>
+<p>Går vi igenom tabellen så upptäcker vi att det finns en tabell med namn “BEF2” som visar befolkning den 1 januari. Vi ber Dst att visa metainfo om tabellen med nedanstående fråga:</p>
+<pre class="r"><code>bodytxt &lt;- &#39;{
+  &quot;lang&quot;: &quot;en&quot;,
+  &quot;table&quot;: &quot;BEF5&quot;,
+  &quot;format&quot;: &quot;JSON&quot;
+}&#39;
+
+
+bodytxt_list &lt;- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+
+req &lt;- POST(&quot;https://api.statbank.dk/v1/tableinfo&quot;,
+            body = bodytxt_list, encode = &quot;json&quot;, verbose())
+
+stop_for_status(req)
+content(req)
+lanswer &lt;- fromJSON(content(req))
+
+dfanswer &lt;- as_data_frame(lanswer[[&quot;variables&quot;]])
+
+head(dfanswer)
+# # A tibble: 4 x 6
+#   id      text             elimination time  values                 map       
+#   &lt;chr&gt;   &lt;chr&gt;            &lt;lgl&gt;       &lt;lgl&gt; &lt;list&gt;                 &lt;chr&gt;     
+# 1 KØN     sex              TRUE        FALSE &lt;data.frame [2 x 2]&gt;   NA        
+# 2 ALDER   age              TRUE        FALSE &lt;data.frame [126 x 2]&gt; NA        
+# 3 FODLAND country of birth TRUE        FALSE &lt;data.frame [239 x 2]&gt; Verden_dk2
+# 4 Tid     time             FALSE       TRUE  &lt;data.frame [29 x 2]&gt;  NA   
+
+# Notera att kolumnen &quot;values&quot; har en listvariabel som innehåller en dataframe. Vi plockar fram dessa detaframes med hjälp av purrr-paketets unnest-funktion:
+
+unnest(dfanswer)
+# # A tibble: 396 x 7
+#    id    text  elimination time  map   id1   text1  
+#    &lt;chr&gt; &lt;chr&gt; &lt;lgl&gt;       &lt;lgl&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  
+#  1 KØN   sex   TRUE        FALSE NA    M     Men    
+#  2 KØN   sex   TRUE        FALSE NA    K     Women  
+#  3 ALDER age   TRUE        FALSE NA    0     0 years
+#  4 ALDER age   TRUE        FALSE NA    1     1 year 
+#  5 ALDER age   TRUE        FALSE NA    2     2 years
+#  6 ALDER age   TRUE        FALSE NA    3     3 years
+#  7 ALDER age   TRUE        FALSE NA    4     4 years
+#  8 ALDER age   TRUE        FALSE NA    5     5 years
+#  9 ALDER age   TRUE        FALSE NA    6     6 years
+# 10 ALDER age   TRUE        FALSE NA    7     7 years
+# # ... with 386 more rows</code></pre>
+<p>Nu är det dags att hämta hem data. Det gör man genom att bygga frågan med Dst:s <a href="https://api.statbank.dk/console#data">hjälpsida</a>. Nedan har vi valt befolkning som är 54 och 55 år gamla och vi har valt båda könen (vilket markeras med en asterix) och ett födelseland (Danmark).</p>
+<pre class="r"><code>bodytxt &lt;- &#39;{
+  &quot;lang&quot;: &quot;en&quot;,
+&quot;table&quot;: &quot;BEF5&quot;,
+&quot;format&quot;: &quot;CSV&quot;,
+&quot;valuePresentation&quot;: &quot;Value&quot;,
+&quot;delimiter&quot;: &quot;Tab&quot;,
+&quot;variables&quot;: [
+{
+  &quot;code&quot;: &quot;ALDER&quot;,
+  &quot;values&quot;: [
+  &quot;54&quot;,
+  &quot;55&quot;
+  ]
+},
+  {
+  &quot;code&quot;: &quot;KØN&quot;,
+  &quot;values&quot;: [
+  &quot;*&quot;
+  ]
+  },
+  {
+  &quot;code&quot;: &quot;FODLAND&quot;,
+  &quot;values&quot;: [
+  &quot;5100&quot;
+  ]
+
+  },
+  {
+  &quot;code&quot;: &quot;Tid&quot;,
+  &quot;values&quot;: [
+  &quot;2017&quot;,
+  &quot;2016&quot;
+  ]
+  }
+  ]
+  }&#39;
+
+
+bodytxt_list &lt;- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+
+req &lt;- POST(&quot;https://api.statbank.dk/v1/data&quot;,
+            body = bodytxt_list, encode = &quot;json&quot;, verbose())
+
+stop_for_status(req)
+lanswer &lt;- content(req)
+
+dfanswer &lt;- as_data_frame(lanswer)
+
+separate(dfanswer, col = 1, sep = &quot;\t&quot;, into = unlist(strsplit(names(dfanswer), split = &quot;\t&quot;)))
+
+# # A tibble: 8 x 5
+#   ALDER    KØN   FODLAND TID   INDHOLD
+#   &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;  
+# 1 54 years Men   Denmark 2016  33317  
+# 2 54 years Men   Denmark 2017  34051  
+# 3 54 years Women Denmark 2016  33328  
+# 4 54 years Women Denmark 2017  34029  
+# 5 55 years Men   Denmark 2016  33127  
+# 6 55 years Men   Denmark 2017  33127  
+# 7 55 years Women Denmark 2016  33102  
+# 8 55 years Women Denmark 2017  33228  </code></pre>
