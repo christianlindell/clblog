@@ -22,7 +22,8 @@ Beroende på vilken typ av fråga man ställer så måste man använda olika URL
 
 Till att börja med kan vi ladda hem en tabell med alla ämnesområden som finns i Danmark Statistiks databas:
 
-```{r, eval=F}
+
+```r
 library(jsonlite)
 library(httr)
 library(magrittr)
@@ -63,14 +64,13 @@ head(dfanswer, 13)
 # 11 11                          Business sectors   TRUE        TRUE
 # 12 01         Geography, environment and energy   TRUE        TRUE
 # 13 19                                     Other   TRUE        TRUE
-
 ```
 
 Låt oss ta reda på vilka tabeller det finns under ämnet "Population and elections" (id = "02"):
 
 
-```{r, eval=FALSE}
 
+```r
 bodytxt <- '{
   "lang": "en",
   "subjects": [
@@ -111,17 +111,14 @@ head(dfanswer, 10)
 # 11 BEF5   Population 1. January                             numb~ 2018-02-09T08:0~ 1990        2018         TRUE   <chr [4]>
 # 12 BY3    Population 1. January                             -     2018-06-11T08:0~ 2017        2017         TRUE   <chr [3]>
 # 13 BY1    Population 1. January                             numb~ 2018-04-18T08:0~ 2010        2018         TRUE   <chr [4]>
-
-
-
 ```
 
 
 Går vi igenom tabellen så upptäcker vi att det finns en tabell med namn "BEF5" som visar befolkning den 1 januari. Vi ber Dst att visa metainfo om tabellen med nedanstående fråga:
 
 
-```{r, eval=F}
 
+```r
 bodytxt <- '{
   "lang": "en",
   "table": "BEF5",
@@ -168,7 +165,6 @@ unnest(dfanswer)
 #  9 ALDER age   TRUE        FALSE NA    6     6 years
 # 10 ALDER age   TRUE        FALSE NA    7     7 years
 # # ... with 386 more rows
-
 ```
 
 Nu är det dags att hämta hem data. Det gör man genom att bygga frågan med Dst:s [hjälpsida](https://api.statbank.dk/console#data). Nedan har vi valt befolkning som är 54 och 55 år gamla och vi har valt båda könen (vilket markeras med en asterix) och ett födelseland (Danmark).
@@ -178,7 +174,8 @@ Gå till Dst:s konsolsida, se till så att "Choose API call:" är satt till Retr
 Variabler kan väljas genom att man klickar på dem i rutan" Variable- and value codes"
 ![](/post/2018-06-23-ladda-hem-data-från-danmarks-statistk-med-r-med-dst-s-api_files/dst_konsol.png)
 
-```{r, eval=F}
+
+```r
 bodytxt <- '{
   "lang": "en",
 "table": "BEF5",

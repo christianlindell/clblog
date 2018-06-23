@@ -1,5 +1,5 @@
 ---
-title: Ladda hem data från Danmarks Statistk med R med Dst:s API
+title: Ladda hem data från Danmarks Statistk med R - Dst:s API
 author: Christian LIndell
 date: '2018-06-23'
 categories:
@@ -46,9 +46,23 @@ stop_for_status(req)
 content(req)
 dfanswer &lt;- fromJSON(content(req))[, 1:4]
 
-
-
-bodytxt &lt;- &#39;{
+head(dfanswer, 13)
+#    id                               description active hasSubjects
+# 1  02                  Population and elections   TRUE        TRUE
+# 2  05                         Living conditions   TRUE        TRUE
+# 3  03                   Education and knowledge   TRUE        TRUE
+# 4  18               Culture and National Church   TRUE        TRUE
+# 5  04                 Labour, income and wealth   TRUE        TRUE
+# 6  06                    Prices and consumption   TRUE        TRUE
+# 7  14 National accounts and government finances   TRUE        TRUE
+# 8  16                   Money and credit market   TRUE        TRUE
+# 9  13                          External economy   TRUE        TRUE
+# 10 07                Business sector in general   TRUE        TRUE
+# 11 11                          Business sectors   TRUE        TRUE
+# 12 01         Geography, environment and energy   TRUE        TRUE
+# 13 19                                     Other   TRUE        TRUE</code></pre>
+<p>Låt oss ta reda på vilka tabeller det finns under ämnet “Population and elections” (id = “02”):</p>
+<pre class="r"><code>bodytxt &lt;- &#39;{
   &quot;lang&quot;: &quot;en&quot;,
   &quot;subjects&quot;: [
     &quot;02&quot;
@@ -70,17 +84,25 @@ dfanswer &lt;- fromJSON(content(req))
 
 dfanswer &lt;- as_data_frame(dfanswer)
 
-head(dfanswer)
+head(dfanswer, 10)
 
-# id     text                                       unit   updated             firstPeriod latestPeriod active variables
-# &lt;chr&gt;  &lt;chr&gt;                                      &lt;chr&gt;  &lt;chr&gt;               &lt;chr&gt;       &lt;chr&gt;        &lt;lgl&gt;  &lt;list&gt;   
-#   1 FOLK1A Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
-#   2 FOLK1B Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
-#   3 FOLK1C Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [6]&gt;
-#   4 FOLK1D Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
-#   5 FOLK1E Population at the first day of the quarter number 2018-05-08T08:00:00 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
-#   6 FOLK2  Population 1. January                      number 2018-02-09T08:00:00 1980        2018         TRUE   &lt;chr [6]&gt;</code></pre>
-<p>Går vi igenom tabellen så upptäcker vi att det finns en tabell med namn “BEF2” som visar befolkning den 1 januari. Vi ber Dst att visa metainfo om tabellen med nedanstående fråga:</p>
+# A tibble: 13 x 8
+#    id     text                                              unit  updated          firstPeriod latestPeriod active variables
+#    &lt;chr&gt;  &lt;chr&gt;                                             &lt;chr&gt; &lt;chr&gt;            &lt;chr&gt;       &lt;chr&gt;        &lt;lgl&gt;  &lt;list&gt;   
+#  1 FOLK1A Population at the first day of the quarter        numb~ 2018-05-08T08:0~ 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#  2 FOLK1B Population at the first day of the quarter        numb~ 2018-05-08T08:0~ 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#  3 FOLK1C Population at the first day of the quarter        numb~ 2018-05-08T08:0~ 2008Q1      2018Q2       TRUE   &lt;chr [6]&gt;
+#  4 FOLK1D Population at the first day of the quarter        numb~ 2018-05-08T08:0~ 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#  5 FOLK1E Population at the first day of the quarter        numb~ 2018-05-08T08:0~ 2008Q1      2018Q2       TRUE   &lt;chr [5]&gt;
+#  6 FOLK2  Population 1. January                             numb~ 2018-02-09T08:0~ 1980        2018         TRUE   &lt;chr [6]&gt;
+#  7 FOLK3  Population 1. January                             numb~ 2018-02-09T08:0~ 2008        2018         TRUE   &lt;chr [4]&gt;
+#  8 FT     Population figures from the censuses              numb~ 2018-02-09T08:0~ 1769        2018         TRUE   &lt;chr [2]&gt;
+#  9 BEF5F  People born in Faroe Islands and living in Denma~ numb~ 2018-02-09T08:0~ 2008        2018         TRUE   &lt;chr [4]&gt;
+# 10 BEF5G  People born in Greenland and living in Denmark 1~ numb~ 2018-02-09T08:0~ 2008        2018         TRUE   &lt;chr [4]&gt;
+# 11 BEF5   Population 1. January                             numb~ 2018-02-09T08:0~ 1990        2018         TRUE   &lt;chr [4]&gt;
+# 12 BY3    Population 1. January                             -     2018-06-11T08:0~ 2017        2017         TRUE   &lt;chr [3]&gt;
+# 13 BY1    Population 1. January                             numb~ 2018-04-18T08:0~ 2010        2018         TRUE   &lt;chr [4]&gt;</code></pre>
+<p>Går vi igenom tabellen så upptäcker vi att det finns en tabell med namn “BEF5” som visar befolkning den 1 januari. Vi ber Dst att visa metainfo om tabellen med nedanstående fråga:</p>
 <pre class="r"><code>bodytxt &lt;- &#39;{
   &quot;lang&quot;: &quot;en&quot;,
   &quot;table&quot;: &quot;BEF5&quot;,
@@ -110,7 +132,7 @@ head(dfanswer)
 # 3 FODLAND country of birth TRUE        FALSE &lt;data.frame [239 x 2]&gt; Verden_dk2
 # 4 Tid     time             FALSE       TRUE  &lt;data.frame [29 x 2]&gt;  NA   
 
-# Notera att kolumnen &quot;values&quot; har en listvariabel som innehåller en dataframe. Vi plockar fram dessa detaframes med hjälp av purrr-paketets unnest-funktion:
+# Notera att kolumnen &quot;values&quot; har en listvariabel som innehåller en dataframe. Vi plockar fram dessa dataframes med hjälp av purrr-paketets unnest-funktion:
 
 unnest(dfanswer)
 # # A tibble: 396 x 7
@@ -128,6 +150,9 @@ unnest(dfanswer)
 # 10 ALDER age   TRUE        FALSE NA    7     7 years
 # # ... with 386 more rows</code></pre>
 <p>Nu är det dags att hämta hem data. Det gör man genom att bygga frågan med Dst:s <a href="https://api.statbank.dk/console#data">hjälpsida</a>. Nedan har vi valt befolkning som är 54 och 55 år gamla och vi har valt båda könen (vilket markeras med en asterix) och ett födelseland (Danmark).</p>
+<p>Gå till Dst:s konsolsida, se till så att “Choose API call:” är satt till Retrive data, “Table id” är satt till BEF5 och “Language” till English.</p>
+<p>Variabler kan väljas genom att man klickar på dem i rutan&quot; Variable- and value codes&quot;
+<img src="/post/2018-06-23-ladda-hem-data-från-danmarks-statistk-med-r-med-dst-s-api_files/dst_konsol.png" /></p>
 <pre class="r"><code>bodytxt &lt;- &#39;{
   &quot;lang&quot;: &quot;en&quot;,
 &quot;table&quot;: &quot;BEF5&quot;,
@@ -178,7 +203,9 @@ lanswer &lt;- content(req)
 
 dfanswer &lt;- as_data_frame(lanswer)
 
-separate(dfanswer, col = 1, sep = &quot;\t&quot;, into = unlist(strsplit(names(dfanswer), split = &quot;\t&quot;)))
+dfanswer &lt;- separate(dfanswer, col = 1, sep = &quot;\t&quot;, into = unlist(strsplit(names(dfanswer), split = &quot;\t&quot;)))
+
+head(dfanswer, 8)
 
 # # A tibble: 8 x 5
 #   ALDER    KØN   FODLAND TID   INDHOLD
