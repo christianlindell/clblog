@@ -24,7 +24,7 @@ I det här inlägget beskriver jag hur jag gått tillväga för att ladda hem pl
 
 Med införandet av GDPR följer ett eventuellt problem. Platsannonserna innehåller persondata och rättsläget är osäkert vad beträffar rätten att lagra personuppgifter. För säkerhets skull så börjar jag därför med att definiera en funktion som rensar bort alla meningar i löptext vilka innehåller telefonnummer eller mailadresser. Det innebär att i stort sett samtliga personuppgifter försvinner.
 
-```{r}
+```{r, eval=FALSE}
 # Rensar bort personuppgifter från löptext genom att radera alla meningar
 # som innehåller telefonnr eller mailadresser
 frensa_gdpr <- function(txt) {
@@ -48,7 +48,7 @@ Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda he
 
 
 
-```{r}
+```{r, eval=FALSE}
   library(tidyverse)
   library(httr)
   library(jsonlite)
@@ -88,7 +88,7 @@ Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda he
 
 Nu anropar vi fannonsid med Skåne (lan = 3) och yrken inom data/IT (yrkesomr = 3) som argument. Som retur för vi en lista med metadata för varje annons. Ur denna lista extraherar vi unika annonsid.
 
-```{r}
+```{r, eval=FALSE}
 # Extrahera annonsid
 lannonseryrkesomr <- fannonsid(lan = 12, yrkesomr = 3)
 
@@ -100,7 +100,7 @@ an_id <-
 Nu har vi en vektor med unika annonsid som vi kan skicka in i en funktion som hämtar de fulla annonstexterna. Dessvärre är den lista med annonser som vi får i retur från servern ganska komplicerat vilket fodrar en del bearbetning, se kommentarer i koden nedan. Eftersom det kan ta lång tid att köra funktionen så har jag även lagt till en progress bar (koden till den har jag lånat av R-gurun Bob Rudis). Notera att GDPR rensning är defalultval i funktionsanropet. Vill du leva farligt kan den sättas till FALSE, men det sker på eget ansvar...
 
 
-```{r}
+```{r, eval=FALS}
   # Function för att hämta annons med annonsid som input. Pb styr hur många iterationer som
   # ska göras och bestämmer längden på progress bar
   fannonstext <- function(annonsid = "111", .pb = pb, rensa_gdpr = TRUE) {    
@@ -199,14 +199,28 @@ Nu har vi en vektor med unika annonsid som vi kan skicka in i en funktion som h�
 Nu är det dags att hämta hem annonstexterna med funktionen fannonstext() som vi definierat ovan. I stället för att använda mig av en loop för att hämta hem alla annonserna med de annonsid som jag hämtat hem tidigare så använder jag funktionen map_df från purrr-paketet. Map_df går igenom vektorn med annonsid och för varje annonsid anropas funktionen fannonstext. När alla annonstexter hämtas hem sammanfogas alla de dataframes som returnerats - en för varje annons - ihop till en stor stor dataframe som innehåller alla annonser.
   
 
-```{r}
+```{r, eval=FALSE}
 # För att snabba upp skriptet så hämtar vi bara hem de
-# 20 första annonserna
-an_id <- an_id[1:20]
+# 10 första annonserna
+an_id <- an_id[1:10]
 pb <- progress_estimated(length(an_id))
 dfannons <-
 purrr::map_df(an_id, fannonstext, .pb = pb, rensa_gdpr = TRUE)
 
 head(dfannons)
+
+# # A tibble: 6 x 34
+#   annonsid platsannonsUrl  annonsrubrik annonstext                yrkesbenamning yrkesid publiceraddatum antal_platser kommunnamn kommunkod
+#   <chr>    <chr>           <chr>        <chr>                     <chr>          <chr>   <chr>                   <int> <chr>      <chr>    
+# 1 7783803  https://www.ar~ Onsitetekni~ "Har du erfarenhet som o~ Helpdesktekni~ 7020    2018-06-21T20:~             1 Lund       1281     
+# 2 7783666  https://www.ar~ Verksamhets~ "Vellinge kommun med sin~ IT-samordnare  2915    2018-06-21T16:~             1 Vellinge   1233     
+# 3 7783611  https://www.ar~ Vi söker Fu~ "Vill du jobba med utvec~ Mjukvaruutvec~ 80      2018-06-21T16:~             1 Malmö      1280     
+# 4 7783580  https://www.ar~ Mjukvaruutv~ "About Axis Communicatio~ Mjukvaruutvec~ 80      2018-06-21T15:~             1 Lund       1281     
+# 5 7783503  https://www.ar~ Systemkonsu~ "Vi är svenska landslage~ Systemarkitekt 7601    2018-06-21T15:~             1 Malmö      1280     
+# 6 7783489  https://www.ar~ Service Del~ "E.ON is looking for a S~ IT-arkitekt/L~ 6626    2018-06-21T15:~             1 Malmö      1280     
+# # ... with 24 more variables: antalplatserVisa <int>, anstallningstyp <chr>, varaktighet <chr>, arbetstid <chr>,
+# #   arbetstidvaraktighet <chr>, lonetyp <chr>, loneform <chr>, webbplats <chr>, sista_ansokningsdag <chr>, ovrigt_om_ansokan <chr>,
+# #   arbetsplatsnamn <chr>, postnummer <chr>, postadress <chr>, postort <chr>, postland <chr>, land <chr>, besoksadress <chr>,
+# #   logotypurl <chr>, hemsida <chr>, egenbil <lgl>, kontaktdata <lgl>, korkortslista <chr>, referens <chr>, epostadress <chr>
 ```
 

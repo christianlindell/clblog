@@ -167,14 +167,14 @@ an_id &lt;-
   }</code></pre>
 <p>Nu är det dags att hämta hem annonstexterna med funktionen fannonstext() som vi definierat ovan. I stället för att använda mig av en loop för att hämta hem alla annonserna med de annonsid som jag hämtat hem tidigare så använder jag funktionen map_df från purrr-paketet. Map_df går igenom vektorn med annonsid och för varje annonsid anropas funktionen fannonstext. När alla annonstexter hämtas hem sammanfogas alla de dataframes som returnerats - en för varje annons - ihop till en stor stor dataframe som innehåller alla annonser.</p>
 <pre class="r"><code># För att snabba upp skriptet så hämtar vi bara hem de
-# 20 första annonserna
-an_id &lt;- an_id[1:20]
+# 10 första annonserna
+an_id &lt;- an_id[1:10]
 pb &lt;- progress_estimated(length(an_id))
 dfannons &lt;-
 purrr::map_df(an_id, fannonstext, .pb = pb, rensa_gdpr = TRUE)
 
 head(dfannons)</code></pre>
-<pre><code>## # A tibble: 6 x 36
+<pre><code>## # A tibble: 6 x 34
 ##   annonsid platsannonsUrl  annonsrubrik annonstext  yrkesbenamning yrkesid
 ##   &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;        &lt;chr&gt;       &lt;chr&gt;          &lt;chr&gt;  
 ## 1 7783803  https://www.ar~ Onsitetekni~ &quot;Har du er~ Helpdesktekni~ 7020   
@@ -183,7 +183,7 @@ head(dfannons)</code></pre>
 ## 4 7783580  https://www.ar~ Mjukvaruutv~ &quot;About Axi~ Mjukvaruutvec~ 80     
 ## 5 7783503  https://www.ar~ Systemkonsu~ &quot;Vi är sve~ Systemarkitekt 7601   
 ## 6 7783489  https://www.ar~ Service Del~ &quot;E.ON is l~ IT-arkitekt/L~ 6626   
-## # ... with 30 more variables: publiceraddatum &lt;chr&gt;, antal_platser &lt;int&gt;,
+## # ... with 28 more variables: publiceraddatum &lt;chr&gt;, antal_platser &lt;int&gt;,
 ## #   kommunnamn &lt;chr&gt;, kommunkod &lt;chr&gt;, antalplatserVisa &lt;int&gt;,
 ## #   anstallningstyp &lt;chr&gt;, varaktighet &lt;chr&gt;, arbetstid &lt;chr&gt;,
 ## #   arbetstidvaraktighet &lt;chr&gt;, lonetyp &lt;chr&gt;, loneform &lt;chr&gt;,
@@ -191,5 +191,4 @@ head(dfannons)</code></pre>
 ## #   arbetsplatsnamn &lt;chr&gt;, postnummer &lt;chr&gt;, postadress &lt;chr&gt;,
 ## #   postort &lt;chr&gt;, postland &lt;chr&gt;, land &lt;chr&gt;, besoksadress &lt;chr&gt;,
 ## #   logotypurl &lt;chr&gt;, hemsida &lt;chr&gt;, egenbil &lt;lgl&gt;, kontaktdata &lt;lgl&gt;,
-## #   korkortslista &lt;chr&gt;, referens &lt;chr&gt;, epostadress &lt;chr&gt;,
-## #   besoksort &lt;chr&gt;, telefonnummer &lt;chr&gt;</code></pre>
+## #   korkortslista &lt;chr&gt;, referens &lt;chr&gt;, epostadress &lt;chr&gt;</code></pre>
