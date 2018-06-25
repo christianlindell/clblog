@@ -163,7 +163,7 @@ unnest(dfanswer)
 ```
 
 
-Dataframen vi får i retur visar att det är tabellen vid namn "OEPEN1S" som innehåller pendling från Skånska kommuner till danska kommuner i Öresundsregionen. Det enklaste är nu att bygga JSON-frågan i konsolen. Det går att klicka på variablerna i textrutan "Variable- and value codes" för att lägga till dem i JSON-frågan. Vill man ha med alla värden skriver man en asterix:
+Dataframen vi får i retur visar att det är tabellen vid namn "OEPEN1S" som innehåller pendling från Skånska kommuner till danska kommuner i Öresundsregionen. Det enklaste är nu att bygga JSON-frågan i [konsolen](http://api.statbank.dk/s24/console). Det går att klicka på variablerna i textrutan "Variable- and value codes" för att lägga till dem i JSON-frågan. Vill man ha med alla värden skriver man en asterix:
 
 ![](/post/2018-06-25-ladda-hem-data-från-öresundsdatabanken-med-r_files/orestat_konsol.png)
 

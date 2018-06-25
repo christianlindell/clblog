@@ -139,7 +139,7 @@ unnest(dfanswer)
 #  9 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1261  1261 Kävlinge      
 # 10 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1262  1262 Lomma         
 # # ... with 94 more rows</code></pre>
-<p>Dataframen vi får i retur visar att det är tabellen vid namn “OEPEN1S” som innehåller pendling från Skånska kommuner till danska kommuner i Öresundsregionen. Det enklaste är nu att bygga JSON-frågan i konsolen. Det går att klicka på variablerna i textrutan “Variable- and value codes” för att lägga till dem i JSON-frågan. Vill man ha med alla värden skriver man en asterix:</p>
+<p>Dataframen vi får i retur visar att det är tabellen vid namn “OEPEN1S” som innehåller pendling från Skånska kommuner till danska kommuner i Öresundsregionen. Det enklaste är nu att bygga JSON-frågan i <a href="http://api.statbank.dk/s24/console">konsolen</a>. Det går att klicka på variablerna i textrutan “Variable- and value codes” för att lägga till dem i JSON-frågan. Vill man ha med alla värden skriver man en asterix:</p>
 <p><img src="/post/2018-06-25-ladda-hem-data-från-öresundsdatabanken-med-r_files/orestat_konsol.png" /></p>
 <p>Kopiera JSON-frågan i “3) Call the API with the chosen settings:” och klistra in i som fråga till POST-anropet till Örestatdatabanken enligt nedan:</p>
 <pre class="r"><code>bodytxt &lt;- &#39;{
