@@ -1,0 +1,243 @@
+---
+title: Ladda hem data från Öresundsdatabanken med R
+author: Christian Lindell
+date: '2018-06-25'
+slug: ladda-hem-data-från-öresundsdatabanken-med-r
+categories:
+  - R
+tags:
+  - Öresundsdatabanken
+  - API
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+
+Det är Danmarks Statistik som driftar [Öresundsdatabasen](http://www.orestat.se/) och det API som används är identiskt med det som Danmarks Statistik använder för sin egen statistikdatabas.
+
+Skillnaden mellan att använda API:et för Öresundsdatabasen och API:et för Danmarks Statistiks databas är att det är olika webbadresser till databasen och konsolen.
+
+Om man vill öppna konsolen som gäller den svenska/engelska versionen av Öresundsdatabasen används [http://api.statbank.dk/s24/console](http://api.statbank.dk/s24/console), om man istället vill använda den danska/engelska varianten används [http://api.statbank.dk/s23/console](http://api.statbank.dk/s23/console). Maunualen till API:et hittar du [här](https://api.statbank.dk/console#subjects).
+
+Vi börjar med att ta fram en lista med alla användningsområden. Detta gör vi genom att anropa "http://api.statbank.dk/v1/s24/subjects" enligt nedan:
+
+
+```{r}
+library(jsonlite)
+library(httr)
+library(magrittr)
+library(tidyr)
+library(purrr)
+library(tibble)
+
+
+bodytxt <- '{
+   "lang": "en",
+   "format": "JSON"
+}'
+
+
+bodytxt_list <- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+  
+req <- POST("http://api.statbank.dk/v1/s24/subjects",
+            body = bodytxt_list, encode = "json", verbose())
+
+stop_for_status(req)
+content(req)
+dfanswer <- fromJSON(content(req))[, 1:4]
+
+head(dfanswer, 10)
+
+#     id                         description active hasSubjects
+# 1  240                          Befolkning   TRUE        TRUE
+# 2  241                           Commuting   TRUE        TRUE
+# 3  242                           Migration   TRUE        TRUE
+# 4  243                       Labour market   TRUE        TRUE
+# 5  244               Housing and household   TRUE        TRUE
+# 6  245                 Culture and Tourism   TRUE        TRUE
+# 7  246 Climate and sustainable development   TRUE        TRUE
+# 8  247              Education and research   TRUE        TRUE
+# 9  248                   Regional accounts   TRUE        TRUE
+# 10 265         Enterprises and local units   TRUE        TRUE
+```
+
+
+Låt säga att vi är intresserade av att se hur många som pendlar från Malmö till danska kommuner i Öresundsregionen. Vi börjar med att se vilka olika tabeller det finns under ämnesområdet "Commuting", vilket har id-nummer 241. Vi anropar "http://api.statbank.dk/v1/s24/tables" med "subjects" satt till "241":
+
+```{r}
+bodytxt <- '{
+   "lang": "en",
+   "subjects": [
+      "241"
+   ]
+}'
+
+
+bodytxt_list <- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+
+req <- POST("http://api.statbank.dk/v1/s24/tables",
+            body = bodytxt_list, encode = "json", verbose())
+
+stop_for_status(req)
+content(req)
+dfanswer <- fromJSON(content(req))
+
+dfanswer <- as_data_frame(dfanswer)
+
+head(dfanswer, 10)
+
+# # A tibble: 10 x 8
+#    id       text                                              unit   updated          firstPeriod latestPeriod active variables
+#    <chr>    <chr>                                             <chr>  <chr>            <chr>       <chr>        <lgl>  <list>   
+#  1 OEPEN1S  Commuters and other income recipients from Swede~ number 2017-06-23T09:0~ 1997        2015         TRUE   <chr [5]>
+#  2 OEPEN2S  Commuters and other income recipients from Denma~ number 2017-06-23T09:0~ 1997        2015         TRUE   <chr [5]>
+#  3 OEPEN3S  National and Öresund commuters                    number 2017-10-20T09:0~ 1997        2015         TRUE   <chr [5]>
+#  4 OEPEN12S Commuters between Denmark and Sweden              number 2017-06-23T09:0~ 1997        2015         TRUE   <chr [4]>
+#  5 OEPEN34S Commuters between Denmark and Sweden              number 2017-06-23T09:0~ 1997        2015         TRUE   <chr [5]>
+#  6 OEPEN40S Commuters between Denmark and Sweden              number 2013-03-22T09:0~ 1997        2007         TRUE   <chr [4]>
+#  7 OEPEN41S Commuters between Denmark and Sweden              number 2017-06-23T09:0~ 2008        2015         TRUE   <chr [4]>
+#  8 OEPEN42S Commuters and other income recipients             number 2017-06-23T09:0~ 2008        2015         TRUE   <chr [6]>
+#  9 OEPEN50S Commuters between Denmark and Sweden              number 2017-06-23T09:0~ 1997        2015         TRUE   <chr [5]>
+# 10 OEPEN60S Quarterly commuting from Sweden to Denmark        number 2018-04-26T08:0~ 2012Q1      2017Q3       TRUE   <chr [3]>
+```
+  
+  
+Tabellen "Commuters and other income recipients from Sweden to Denmark" med id "OEPEN1S" verkar innehålla den information vi är ute efter. Vi kollar vilken metainformation som det finns om tabellen genom att anropa "http://api.statbank.dk/v1/s24/tableinfo" med tabell-id som argument:
+
+
+```{r}
+bodytxt <- '{
+   "lang": "en",
+   "table": "OEPEN1S"
+}'
+
+
+bodytxt_list <- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+
+req <- POST("http://api.statbank.dk/v1/s24/tableinfo",
+            body = bodytxt_list, encode = "json", verbose())
+
+stop_for_status(req)
+content(req)
+lanswer <- fromJSON(content(req))
+
+dfanswer <- as_data_frame(lanswer[["variables"]])
+
+head(dfanswer)
+# # A tibble: 5 x 6
+#   id       text                       elimination time  map                       values               
+#   <chr>    <chr>                      <lgl>       <lgl> <chr>                     <list>               
+# 1 BOPKOMSV municipality of residence  TRUE        FALSE oeresund_municipality2007 <data.frame [34 x 2]>
+# 2 ARBKOMSV working place municipality TRUE        FALSE oeresund_municipality2007 <data.frame [47 x 2]>
+# 3 TYPESV   type                       TRUE        FALSE NA                        <data.frame [2 x 2]> 
+# 4 KONSV    sex                        TRUE        FALSE NA                        <data.frame [2 x 2]> 
+# 5 Tid      time                       FALSE       TRUE  NA                        <data.frame [19 x 2]>  
+
+# Notera att kolumnen "values" har en listvariabel som innehåller en dataframe. Vi plockar fram dessa dataframes med hjälp av purrr-paketets unnest-funktion:
+
+unnest(dfanswer)
+
+# # A tibble: 104 x 7
+#    id       text                      elimination time  map                       id1   text1              
+#    <chr>    <chr>                     <lgl>       <lgl> <chr>                     <chr> <chr>              
+#  1 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1198  1198 Rest of Sweden
+#  2 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1214  1214 Svalöv        
+#  3 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1230  1230 Staffanstorp  
+#  4 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1231  1231 Burlöv        
+#  5 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1233  1233 Vellinge      
+#  6 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1256  1256 Östra Göinge  
+#  7 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1257  1257 Örkelljunga   
+#  8 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1260  1260 Bjuv          
+#  9 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1261  1261 Kävlinge      
+# 10 BOPKOMSV municipality of residence TRUE        FALSE oeresund_municipality2007 1262  1262 Lomma         
+# # ... with 94 more rows
+```
+
+
+Dataframen vi får i retur visar att det är tabellen vid namn "OEPEN1S" som innehåller pendling från Skånska kommuner till danska kommuner i Öresundsregionen. Det enklaste är nu att bygga JSON-frågan i konsolen. Det går att klicka på variablerna i textrutan "Variable- and value codes" för att lägga till dem i JSON-frågan. Vill man ha med alla värden skriver man en asterix:
+
+![](/post/2018-06-25-ladda-hem-data-från-öresundsdatabanken-med-r_files/orestat_konsol.png)
+
+Kopiera JSON-frågan i "3) Call the API with the chosen settings:" och klistra in i som fråga till POST-anropet till Örestatdatabanken enligt nedan:
+
+```{r}
+bodytxt <- '{
+   "lang": "en",
+   "table": "OEPEN1S",
+   "format": "CSV",
+   "valuePresentation": "Value",
+   "delimiter": "Tab",
+   "variables": [
+      {
+         "code": "BOPKOMSV",
+         "values": [
+            "1280"
+         ]
+      },
+      {
+         "code": "ARBKOMSV",
+         "values": [
+            "*"
+         ]
+      },
+      {
+         "code": "TYPESV",
+         "values": [
+            "1"
+         ]
+      },
+      {
+         "code": "Tid",
+         "values": [
+            "2015"
+         ]
+      }
+   ]
+}'
+
+
+bodytxt_list <- jsonlite::fromJSON(bodytxt,
+                                   simplifyVector = FALSE,
+                                   simplifyDataFrame = FALSE)
+
+req <- POST("http://api.statbank.dk/v1/s24/data",
+            body = bodytxt_list, encode = "json", verbose())
+
+stop_for_status(req)
+
+dfanswer <- as_data_frame(content(req))
+
+dfanswer <- separate(dfanswer, col = 1, sep = "\t", into = unlist(strsplit(names(dfanswer), split = "\t")))
+
+# Värdevariabeln (INHOLD) är av typ character och inte av typ integer. Det fixar vi med:
+
+dfanswer$INDHOLD <- as.integer(dfanswer$INDHOLD)
+
+dfanswer
+
+# # A tibble: 47 x 5
+#    BOPKOMSV   ARBKOMSV           TYPESV    TID   INDHOLD
+#    <chr>      <chr>              <chr>     <chr>   <int>
+#  1 1280 Malmö 96 Rest of Denmark Commuters 2015        0
+#  2 1280 Malmö 101 Copenhagen     Commuters 2015     3951
+#  3 1280 Malmö 147 Frederiksberg  Commuters 2015      330
+#  4 1280 Malmö 151 Ballerup       Commuters 2015      261
+#  5 1280 Malmö 153 Brøndby        Commuters 2015      194
+#  6 1280 Malmö 155 Dragør         Commuters 2015       30
+#  7 1280 Malmö 157 Gentofte       Commuters 2015      199
+#  8 1280 Malmö 159 Gladsaxe       Commuters 2015      359
+#  9 1280 Malmö 161 Glostrup       Commuters 2015      135
+# 10 1280 Malmö 163 Herlev         Commuters 2015      114
+# # ... with 37 more rows
+
+```
+

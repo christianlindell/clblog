@@ -1,18 +1,19 @@
 ---
-title: Hämta platsannonsdata från Arbetsförmedlingen med R
+title: Ladda hem platsannonser från Arbetsformedlingen med R
 author: Christian Lindell
-date: '2018-06-15'
+date: '2018-06-24'
+slug: ladda-hem-platsannonser-fran-arbetsformedlingen-med-r
 categories:
   - R
 tags:
   - AF
   - API
-slug: hämta-platsannonsdata-från-arbetsförmedlingen-med-r
 ---
 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```{r setup, include=FALSE, eval=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, eval = FALSE)
 ```
 
 
@@ -100,7 +101,7 @@ an_id <-
 Nu har vi en vektor med unika annonsid som vi kan skicka in i en funktion som hämtar de fulla annonstexterna. Dessvärre är den lista med annonser som vi får i retur från servern ganska komplicerat vilket fodrar en del bearbetning, se kommentarer i koden nedan. Eftersom det kan ta lång tid att köra funktionen så har jag även lagt till en progress bar (koden till den har jag lånat av R-gurun Bob Rudis). Notera att GDPR rensning är defalultval i funktionsanropet. Vill du leva farligt kan den sättas till FALSE, men det sker på eget ansvar...
 
 
-```{r, eval=FALS}
+```{r, eval=FALSE}
   # Function för att hämta annons med annonsid som input. Pb styr hur många iterationer som
   # ska göras och bestämmer längden på progress bar
   fannonstext <- function(annonsid = "111", .pb = pb, rensa_gdpr = TRUE) {    

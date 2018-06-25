@@ -1,13 +1,13 @@
 ---
-title: Hämta platsannonsdata från Arbetsförmedlingen med R
+title: Ladda hem platsannonser från Arbetsformedlingen med R
 author: Christian Lindell
-date: '2018-06-15'
+date: '2018-06-24'
+slug: ladda-hem-platsannonser-fran-arbetsformedlingen-med-r
 categories:
   - R
 tags:
   - AF
   - API
-slug: hämta-platsannonsdata-från-arbetsförmedlingen-med-r
 ---
 
 
@@ -173,22 +173,18 @@ pb &lt;- progress_estimated(length(an_id))
 dfannons &lt;-
 purrr::map_df(an_id, fannonstext, .pb = pb, rensa_gdpr = TRUE)
 
-head(dfannons)</code></pre>
-<pre><code>## # A tibble: 6 x 34
-##   annonsid platsannonsUrl  annonsrubrik annonstext  yrkesbenamning yrkesid
-##   &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;        &lt;chr&gt;       &lt;chr&gt;          &lt;chr&gt;  
-## 1 7783803  https://www.ar~ Onsitetekni~ &quot;Har du er~ Helpdesktekni~ 7020   
-## 2 7783666  https://www.ar~ Verksamhets~ &quot;Vellinge ~ IT-samordnare  2915   
-## 3 7783611  https://www.ar~ Vi söker Fu~ &quot;Vill du j~ Mjukvaruutvec~ 80     
-## 4 7783580  https://www.ar~ Mjukvaruutv~ &quot;About Axi~ Mjukvaruutvec~ 80     
-## 5 7783503  https://www.ar~ Systemkonsu~ &quot;Vi är sve~ Systemarkitekt 7601   
-## 6 7783489  https://www.ar~ Service Del~ &quot;E.ON is l~ IT-arkitekt/L~ 6626   
-## # ... with 28 more variables: publiceraddatum &lt;chr&gt;, antal_platser &lt;int&gt;,
-## #   kommunnamn &lt;chr&gt;, kommunkod &lt;chr&gt;, antalplatserVisa &lt;int&gt;,
-## #   anstallningstyp &lt;chr&gt;, varaktighet &lt;chr&gt;, arbetstid &lt;chr&gt;,
-## #   arbetstidvaraktighet &lt;chr&gt;, lonetyp &lt;chr&gt;, loneform &lt;chr&gt;,
-## #   webbplats &lt;chr&gt;, sista_ansokningsdag &lt;chr&gt;, ovrigt_om_ansokan &lt;chr&gt;,
-## #   arbetsplatsnamn &lt;chr&gt;, postnummer &lt;chr&gt;, postadress &lt;chr&gt;,
-## #   postort &lt;chr&gt;, postland &lt;chr&gt;, land &lt;chr&gt;, besoksadress &lt;chr&gt;,
-## #   logotypurl &lt;chr&gt;, hemsida &lt;chr&gt;, egenbil &lt;lgl&gt;, kontaktdata &lt;lgl&gt;,
-## #   korkortslista &lt;chr&gt;, referens &lt;chr&gt;, epostadress &lt;chr&gt;</code></pre>
+head(dfannons)
+
+# # A tibble: 6 x 34
+#   annonsid platsannonsUrl  annonsrubrik annonstext                yrkesbenamning yrkesid publiceraddatum antal_platser kommunnamn kommunkod
+#   &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;        &lt;chr&gt;                     &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;                   &lt;int&gt; &lt;chr&gt;      &lt;chr&gt;    
+# 1 7783803  https://www.ar~ Onsitetekni~ &quot;Har du erfarenhet som o~ Helpdesktekni~ 7020    2018-06-21T20:~             1 Lund       1281     
+# 2 7783666  https://www.ar~ Verksamhets~ &quot;Vellinge kommun med sin~ IT-samordnare  2915    2018-06-21T16:~             1 Vellinge   1233     
+# 3 7783611  https://www.ar~ Vi söker Fu~ &quot;Vill du jobba med utvec~ Mjukvaruutvec~ 80      2018-06-21T16:~             1 Malmö      1280     
+# 4 7783580  https://www.ar~ Mjukvaruutv~ &quot;About Axis Communicatio~ Mjukvaruutvec~ 80      2018-06-21T15:~             1 Lund       1281     
+# 5 7783503  https://www.ar~ Systemkonsu~ &quot;Vi är svenska landslage~ Systemarkitekt 7601    2018-06-21T15:~             1 Malmö      1280     
+# 6 7783489  https://www.ar~ Service Del~ &quot;E.ON is looking for a S~ IT-arkitekt/L~ 6626    2018-06-21T15:~             1 Malmö      1280     
+# # ... with 24 more variables: antalplatserVisa &lt;int&gt;, anstallningstyp &lt;chr&gt;, varaktighet &lt;chr&gt;, arbetstid &lt;chr&gt;,
+# #   arbetstidvaraktighet &lt;chr&gt;, lonetyp &lt;chr&gt;, loneform &lt;chr&gt;, webbplats &lt;chr&gt;, sista_ansokningsdag &lt;chr&gt;, ovrigt_om_ansokan &lt;chr&gt;,
+# #   arbetsplatsnamn &lt;chr&gt;, postnummer &lt;chr&gt;, postadress &lt;chr&gt;, postort &lt;chr&gt;, postland &lt;chr&gt;, land &lt;chr&gt;, besoksadress &lt;chr&gt;,
+# #   logotypurl &lt;chr&gt;, hemsida &lt;chr&gt;, egenbil &lt;lgl&gt;, kontaktdata &lt;lgl&gt;, korkortslista &lt;chr&gt;, referens &lt;chr&gt;, epostadress &lt;chr&gt;</code></pre>
