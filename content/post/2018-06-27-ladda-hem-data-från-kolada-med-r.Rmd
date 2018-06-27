@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE, eval = F)
 
 Det finns en gemensam databas för Sveriges kommuner och landsting/regioner som heter [Kolada](https://www.kolada.se/). Databasen innehåller runt 5 000 olika nyckeltal. Det finns ett [API](https://github.com/Hypergene/kolada) kopplat till databasen vilket gör att vi kan ladda in data i R. Nackdelen är att API:et skapar datastrukturer som är ganska svårjobbade. Men med lite hjälp av funktionerna i purrr-paketet går det att trassla ut de kompliserade liststrukturerna och få fram en dataframe som output. Hur det går till visas nedan.
 
-API:et anropas med ett GET-anrop. Databasen nås på "http://api.kolada.se/v2/data/". Därefter läggs en kpi-kod (Key Performance Indicator) till i söksträngen (till exempel "http://api.kolada.se/v2/data/N07402") och dessutom kan år och/eller kommun fogas till URL:en (till exempel "http://api.kolada.se/v2/data/N07402/municipality/1280/year/2009"). Notera att kommunnummer används för att refera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel "http://api.kolada.se/v2/data/N07402/municipality/1280,1281/year/2009,2015""
+API:et anropas med ett GET-anrop. Databasen nås på "http://api.kolada.se/v2/data/". Därefter läggs en kpi-kod (Key Performance Indicator) till i söksträngen (till exempel "http://api.kolada.se/v2/data/N07402") och dessutom kan år och/eller kommun fogas till URL:en (till exempel "http://api.kolada.se/v2/data/N07402/municipality/1280/year/2009"). Notera att kommunnummer används för att referera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel "http://api.kolada.se/v2/data/N07402/municipality/1280,1281/year/2009,2015""
 
 # Exempel 1 Mäns våld mot kvinnor
 
@@ -103,7 +103,7 @@ df
 ```
 
 
-#Exempel 2: Ladda hem data för en individuell skola
+# Exempel 2: Ladda hem data för en individuell skola
 
 Den här gången vill vi veta "Antal elever per lärare i årskurs 1-9 omräknat till heltidstjänster". Liksom förra gången letar vi upp indikatorn i det grafiska användargränssnittet. Den här gången är koden för indikatorn "N15033".
 
