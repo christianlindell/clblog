@@ -112,7 +112,7 @@ Den här gången vill vi veta "Antal elever i förskoleklass i kommunal skola be
 ```{r}
 # Exempel: Hämta data för individuell skola ------------------------
 
-# Hämta metadata för N15033
+# Hämta metadata för N11805
 # Antal elever i förskoleklass i kommunal skola belägen i kommunen. Uppgiften 
 # avser läsår, mätt 15 oktober
 
