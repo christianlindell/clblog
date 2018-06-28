@@ -148,7 +148,35 @@ dfobjekt
 #  8 V15E011403001 0114         Frestaskolan         
 #  9 V15E011403101 0114         Vikskolan            
 # 10 V15E011403501 0114         Resursskolan Magneten
-# # ... with 4,901 more rows</code></pre>
+# # ... with 4,901 more rows
+# Man kan också söka alla enheter som finns i en kommun med:</code></pre>
+</div>
+<div id="sok-alla-enheter-i-en-viss-kommun" class="section level2">
+<h2>Sök alla enheter i en viss kommun</h2>
+<p>Ibland vill man ha reda på alla enheter som finns i en viss kommun. Då kan man skapa en fråga som returnerar den uppgiften:</p>
+<pre class="r"><code>url &lt;- &quot;http://api.kolada.se/v2/ou?municipality=1280&quot;
+
+lresult &lt;- content(GET(url))
+
+ltrans &lt;- transpose(lresult$values)
+
+dfobjekt &lt;- map_df(.x = ltrans, .f = simplify)
+
+dfobjekt
+# # A tibble: 372 x 3
+#    id            municipality title                                
+#    &lt;chr&gt;         &lt;chr&gt;        &lt;chr&gt;                                
+#  1 V15E128000301 1280         Dammfriskolan                        
+#  2 V15E128001301 1280         Ribersborgsskolan                    
+#  3 V15E128001601 1280         Sofielundsskolan                     
+#  4 V15E128001801 1280         Stenkulaskolan                       
+#  5 V15E128002101 1280         Videdalsskolan                       
+#  6 V15E128002201 1280         Österportsskolan                     
+#  7 V15E128003301 1280         Slottsstadens skola                  
+#  8 V15E128006301 1280         Bladins grundskola                   
+#  9 V15E128006305 1280         Bladins International School of Malmö
+# 10 V15E128006601 1280         Ängslättskolan                       
+# # ... with 362 more rows</code></pre>
 </div>
 <div id="ladda-hem-data-1" class="section level2">
 <h2>Ladda hem data</h2>
