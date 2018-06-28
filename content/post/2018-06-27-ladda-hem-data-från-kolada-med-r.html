@@ -13,7 +13,7 @@ tags:
 
 
 <p>Det finns en gemensam databas för Sveriges kommuner och landsting/regioner som heter <a href="https://www.kolada.se/">Kolada</a>. Databasen innehåller runt 5 000 olika nyckeltal. Det finns ett <a href="https://github.com/Hypergene/kolada">API</a> kopplat till databasen vilket gör att vi kan ladda in data i R. Nackdelen är att API:et skapar datastrukturer som är ganska svårjobbade. Men med lite hjälp av funktionerna i purrr-paketet går det att trassla ut de komplicerade liststrukturerna och få fram en dataframe som output. Hur det går till visas nedan.</p>
-<p>Om man vill ladda hem data anropas API:et med ett GET-anrop. Databasen nås på “<a href="http://api.kolada.se/v2/data/" class="uri">http://api.kolada.se/v2/data/</a>”. Därefter läggs en kpi-kod (Key Performance Indicator) till i URL:en (till exempel “<a href="http://api.kolada.se/v2/kpi/N07402" class="uri">http://api.kolada.se/v2/kpi/N07402</a>”) och dessutom kan år och/eller kommun fogas till URL:en (till exempel “api.kolada.se/v2/data/kpi/N07402/municipality/1280/year/2011”). Notera att kommunnummer används för att referera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel “<a href="http://api.kolada.se/v2/data/kpi/N07402/municipality/1280,1281/year/2011,2015" class="uri">http://api.kolada.se/v2/data/kpi/N07402/municipality/1280,1281/year/2011,2015</a>”.</p>
+<p>Om man vill ladda hem data anropas API:et med ett GET-anrop. Databasen nås på “<a href="http://api.kolada.se/v2/data/" class="uri">http://api.kolada.se/v2/data/</a>”. Därefter läggs en kpi-kod (Key Performance Indicator) till i URL:en (till exempel “<a href="http://api.kolada.se/v2/kpi/N07402" class="uri">http://api.kolada.se/v2/kpi/N07402</a>”) och dessutom kan år och/eller kommun fogas till URL:en (till exempel “<a href="http://api.kolada.se/v2/data/kpi/N07402/municipality/1280/year/2011" class="uri">http://api.kolada.se/v2/data/kpi/N07402/municipality/1280/year/2011</a>”). Notera att kommunnummer används för att referera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel “<a href="http://api.kolada.se/v2/data/kpi/N07402/municipality/1280,1281/year/2011,2015" class="uri">http://api.kolada.se/v2/data/kpi/N07402/municipality/1280,1281/year/2011,2015</a>”.</p>
 <p>En del indikatorer går att mäta på enhetsnivå, till exempel en enskild skola. I de fallen byts “municipality/kommunkod” ut mot “ou/enhetskod” (“ou” står förmodligen för “operational unit”) och anropet sker till “<a href="http://api.kolada.se/v2/oudata" class="uri">http://api.kolada.se/v2/oudata</a>”.</p>
 <div id="exempel-1-vald-mot-kvinnor" class="section level1">
 <h1>Exempel 1 Våld mot kvinnor</h1>
@@ -186,4 +186,8 @@ df &lt;- df %&gt;%
 # 10 N11805 V15E128000301   2016     1 T      &quot;&quot;         73
 # &gt; </code></pre>
 </div>
+</div>
+<div id="kommentarer" class="section level1">
+<h1>Kommentarer</h1>
+<p>Av alla de API:er jag testat i den här bloggen så är Koladas det mest svårjobbade. Datastrukturen som returneras är komplicerad och kräver en hel del efterbearbetning för att bli användbar. Jag saknar också en samlad tabell över alla variabler och deras KPI-koder. Likaså vore det bra med en tabell över alla enheter och vilka ou-koder de har.</p>
 </div>
