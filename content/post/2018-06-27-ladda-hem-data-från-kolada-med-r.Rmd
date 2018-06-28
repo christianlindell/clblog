@@ -18,9 +18,9 @@ knitr::opts_chunk$set(echo = TRUE, eval = F)
 
 Det finns en gemensam databas för Sveriges kommuner och landsting/regioner som heter [Kolada](https://www.kolada.se/). Databasen innehåller runt 5 000 olika nyckeltal. Det finns ett [API](https://github.com/Hypergene/kolada) kopplat till databasen vilket gör att vi kan ladda in data i R. Nackdelen är att API:et skapar datastrukturer som är ganska svårjobbade. Men med lite hjälp av funktionerna i purrr-paketet går det att trassla ut de komplicerade liststrukturerna och få fram en dataframe som output. Hur det går till visas nedan.
 
-Om man vill ladda hem data anropas API:et med ett GET-anrop. Databasen nås på "http://api.kolada.se/v2/data/". Därefter läggs en kpi-kod (Key Performance Indicator) till i URL:en (till exempel "http://api.kolada.se/v2/data/kpi/N07402") och dessutom kan år och/eller kommun fogas till URL:en (till exempel "http://api.kolada.se/v2/data/kpi/N07402/municipality/1280/year/2009"). Notera att kommunnummer används för att referera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel "http://api.kolada.se/v2/data/kpiN07402/municipality/1280,1281/year/2009,2015".
+Om man vill ladda hem data anropas API:et med ett GET-anrop. Databasen nås på "http://api.kolada.se/v2/data/". Därefter läggs en kpi-kod (Key Performance Indicator) till i URL:en (till exempel "http://api.kolada.se/v2/kpi/N07402") och dessutom kan år och/eller kommun fogas till URL:en (till exempel "api.kolada.se/v2/data/kpi/N07402/municipality/1280/year/2011"). Notera att kommunnummer används för att referera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel "http://api.kolada.se/v2/data/kpi/N07402/municipality/1280,1281/year/2011,2015".
 
-En del indikatorer går att mäta på enhetsnivå, till exempel en enskild skola. I de fallen byts "municipality/kommunkod" ut mot "ou/enhetskod" ("ou" står förmodligen för "operational unit").
+En del indikatorer går att mäta på enhetsnivå, till exempel en enskild skola. I de fallen byts "municipality/kommunkod" ut mot "ou/enhetskod" ("ou" står förmodligen för "operational unit") och anropet sker till "http://api.kolada.se/v2/oudata".
 
 # Exempel 1 Våld mot kvinnor
 
