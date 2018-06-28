@@ -16,11 +16,13 @@ knitr::opts_chunk$set(echo = TRUE, eval = F)
 ```
 
 
-Det finns en gemensam databas för Sveriges kommuner och landsting/regioner som heter [Kolada](https://www.kolada.se/). Databasen innehåller runt 5 000 olika nyckeltal. Det finns ett [API](https://github.com/Hypergene/kolada) kopplat till databasen vilket gör att vi kan ladda in data i R. Nackdelen är att API:et skapar datastrukturer som är ganska svårjobbade. Men med lite hjälp av funktionerna i purrr-paketet går det att trassla ut de kompliserade liststrukturerna och få fram en dataframe som output. Hur det går till visas nedan.
+Det finns en gemensam databas för Sveriges kommuner och landsting/regioner som heter [Kolada](https://www.kolada.se/). Databasen innehåller runt 5 000 olika nyckeltal. Det finns ett [API](https://github.com/Hypergene/kolada) kopplat till databasen vilket gör att vi kan ladda in data i R. Nackdelen är att API:et skapar datastrukturer som är ganska svårjobbade. Men med lite hjälp av funktionerna i purrr-paketet går det att trassla ut de komplicerade liststrukturerna och få fram en dataframe som output. Hur det går till visas nedan.
 
-API:et anropas med ett GET-anrop. Databasen nås på "http://api.kolada.se/v2/data/". Därefter läggs en kpi-kod (Key Performance Indicator) till i söksträngen (till exempel "http://api.kolada.se/v2/data/N07402") och dessutom kan år och/eller kommun fogas till URL:en (till exempel "http://api.kolada.se/v2/data/N07402/municipality/1280/year/2009"). Notera att kommunnummer används för att referera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel "http://api.kolada.se/v2/data/N07402/municipality/1280,1281/year/2009,2015""
+Om man vill ladda hem data anropas API:et med ett GET-anrop. Databasen nås på "http://api.kolada.se/v2/data/". Därefter läggs en kpi-kod (Key Performance Indicator) till i URL:en (till exempel "http://api.kolada.se/v2/data/kpi/N07402") och dessutom kan år och/eller kommun fogas till URL:en (till exempel "http://api.kolada.se/v2/data/kpi/N07402/municipality/1280/year/2009"). Notera att kommunnummer används för att referera till kommun. Om man vill söka efter flera år och eller kommuner kan man ange flera värden separerade med kommatecken, till exempel "http://api.kolada.se/v2/data/kpiN07402/municipality/1280,1281/year/2009,2015".
 
-# Exempel 1 Mäns våld mot kvinnor
+En del indikatorer går att mäta på enhetsnivå, till exempel en enskild skola. I de fallen byts "municipality/kommunkod" ut mot "ou/enhetskod" ("ou" står förmodligen för "operational unit").
+
+# Exempel 1 Våld mot kvinnor
 
 Nedan går jag igenom hur man hittar indikatorn som redovisar antalet fall av grov kvinnofridskränkning per 100 000 invånare, hur man hämtar hem metadata om variabeln och hur man slutligen laddar hem data.
 
@@ -71,12 +73,16 @@ Nästa steg är att ladda hem data
 ```{r}
 # Ladda hem data --------------------------------------------------
 
-# Ladda hem uppgifter om grov kvinnofridskränkning från Kolada:
+# Ladda hem uppgifter om grov kvinnofridskränkning från Kolada. Välj data 
+# för Malmö och Lund, vilket motsvarar kommunkodern 1280 och 1281
+
 url <- "http://api.kolada.se/v2/data/kpi/N07402/municipality/1280,1281"
 lresult <- content(GET(url))
 
-ltrans <- transpose(lresult$values)
+# Resultatet av frågan till API:et kommer i en komplicerad liststruktur, vilket
+# kräver en del omstrukturering av data med hjälp av paketen purrr och tidyr:
 
+ltrans <- transpose(lresult$values)
 
 df <- map_df(.x = ltrans, .f = simplify)
 
@@ -123,6 +129,15 @@ lresult <- content(GET(url))
 
 dfmeta <- map_df(.x = lresult$values, ~flatten(.x))
 
+dfmeta
+
+# # A tibble: 1 x 12
+#   auspices description          has_ou_data id    is_divided_by_g~ municipality_ty~ operating_area ou_publication_~ perspective publ_period
+#   <chr>    <chr>                <lgl>       <chr>            <int> <chr>            <chr>          <chr>            <chr>       <chr>      
+# 1 T        Antal elever i förs~ TRUE        N118~                0 K                Förskoleverks~ 2016-09-30       Volymer     2017       
+# # ... with 2 more variables: publication_date <chr>, title <chr>
+# >
+
 ```
 
 
@@ -161,12 +176,12 @@ dfobjekt
 
 ## Ladda hem data
 
-Nästa steg är att ladda hem data. Vi väljer att ladda hem data för Dammfriskolan i Malml, vilken har koden "V15E128000301".
+Nästa steg är att ladda hem data. Vi väljer att ladda hem data för Dammfriskolan i Malmö, vilken har koden "V15E128000301".
 
 ```{r}
 # Ladda hem data för en skola ---------------------------------------
 
-# Damfriskolan = V15E128000301
+# Dammfriskolan = V15E128000301
 
 url <-  "http://api.kolada.se/v2/oudata/kpi/N11805/ou/V15E128000301"
 
