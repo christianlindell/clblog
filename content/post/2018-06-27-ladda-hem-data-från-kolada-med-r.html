@@ -20,8 +20,43 @@ tags:
 <p>Nedan går jag igenom hur man hittar indikatorn som redovisar antalet fall av grov kvinnofridskränkning per 100 000 invånare, hur man hämtar hem metadata om variabeln och hur man slutligen laddar hem data.</p>
 <div id="hitta-indikatorkoden" class="section level2">
 <h2>Hitta indikatorkoden</h2>
-<p>Gå till Koladas hemsida och navigera dig fram till indikatorn i det grafiska gränssnittet enligt bilden nedan. Om du håller markören över den markerade indikatorn längst till höger så dyker en informationsikon (i) upp. Om du trycker på den så ser du indikatorkoden. Indikatorn vi söker har koden “N07402”.</p>
-<p><img src="/post/2018-06-27-ladda-hem-data-från-kolada-med-r_files/kolada.png" /></p>
+<p>För att ladda hem en indikator måste man först veta vilken KPI-kod den har. Det går att ta reda på vilka indikatorer som finns och vilka koder de har med hjälp av API:et. Med koden nedan kan man få metainformation om alla indikatorer, inklusive KPI-koder, vilka finns under rubriken “id”.</p>
+<pre class="r"><code>library(httr)
+library(purrr)
+library(tidyr)
+
+url &lt;- &quot;http://api.kolada.se/v2/kpi?&quot;
+
+lresult &lt;- content(GET(url))
+dfmeta &lt;- map_df(.x = lresult$values, ~flatten(.x))
+
+dfmeta
+# # A tibble: 4,496 x 13
+#    auspices description       has_ou_data id    is_divided_by_g~ municipality_ty~ operating_area   perspective prel_publicatio~ publ_period
+#    &lt;chr&gt;    &lt;chr&gt;             &lt;lgl&gt;       &lt;chr&gt;            &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;       &lt;chr&gt;            &lt;chr&gt;      
+#  1 E        Personalkostnade~ FALSE       N000~                0 K                Kommunen, överg~ Resurser    2018-05-03       2017       
+#  2 E        Personalkostnade~ FALSE       N000~                0 K                Kommunen, överg~ Resurser    2018-04-10       2017       
+#  3 X        Kommunalekonomis~ FALSE       N000~                0 K                Resultaträkning~ Resurser    2018-04-10       2017       
+#  4 NA       Momsavgift, divi~ FALSE       N000~                0 K                Skatter och utj~ Resurser    NA               NA         
+#  5 X        Invånarrelaterat~ FALSE       N000~                0 K                Skatter och utj~ Resurser    NA               NA         
+#  6 X        Åldersrelaterat ~ FALSE       N000~                0 K                Skatter och utj~ Resurser    NA               NA         
+#  7 NA       Externa intäkter~ FALSE       N000~                0 K                Kommunen, överg~ Resurser    NA               2017       
+#  8 NA       Inkomstutjämning~ FALSE       N000~                0 K                Skatter och utj~ Resurser    2018-09-28       2019       
+#  9 NA       Kostnadsutjämnin~ FALSE       N000~                0 K                Skatter och utj~ Resurser    2018-09-28       2019       
+# 10 X        Generellt statsb~ FALSE       N000~                0 K                Skatter och utj~ Resurser    NA               NA         
+# # ... with 4,486 more rows, and 3 more variables: publication_date &lt;chr&gt;, title &lt;chr&gt;, ou_publication_date &lt;chr&gt;</code></pre>
+<p>Om vi letar bland träffarna ovan så upptäcker vi att kpi-koden vi söker är “N07402”.</p>
+<p>Ett annat alternativ är att söka indikator med hjälp av sökord:</p>
+<pre class="r"><code>url &lt;- &quot;http://api.kolada.se/v2/kpi?title=kvinnofridskränkning&quot;
+
+lresult &lt;- content(GET(url))
+dfmeta &lt;- map_df(.x = lresult$values, ~flatten(.x))
+
+dfmeta
+# # A tibble: 1 x 11
+#   auspices description                 has_ou_data id     is_divided_by_g~ municipality_ty~ operating_area perspective publ_period publication_date title             
+#   &lt;chr&gt;    &lt;chr&gt;                       &lt;lgl&gt;       &lt;chr&gt;             &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;          &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;            &lt;chr&gt;             
+# 1 X        Anmälda brott mot grov kvi~ FALSE       N07402                0 K                Befolkning     Övrigt      2017        2018-03-27       Anmälda brott om ~</code></pre>
 </div>
 <div id="ladda-hem-metadata" class="section level2">
 <h2>Ladda hem metadata</h2>
@@ -214,8 +249,4 @@ df &lt;- df %&gt;%
 # 10 N11805 V15E128000301   2016     1 T      &quot;&quot;         73
 # &gt; </code></pre>
 </div>
-</div>
-<div id="kommentarer" class="section level1">
-<h1>Kommentarer</h1>
-<p>Av alla de API:er jag testat i den här bloggen så är Koladas det mest svårjobbade. Datastrukturen som returneras är komplicerad och kräver en hel del efterbearbetning för att bli användbar. Jag saknar också en samlad tabell över alla variabler och deras KPI-koder. Likaså vore det bra med en tabell över alla enheter och vilka ou-koder de har.</p>
 </div>
