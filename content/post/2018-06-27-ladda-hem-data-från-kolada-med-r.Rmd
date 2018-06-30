@@ -83,14 +83,6 @@ dfmeta
 
 
 ```{r}
-library(httr)
-library(tidyverse)
-
-
-# Ladda hem metadata ----------------------------------------------
-
-library(httr)
-library(tidyverse)
 
 # Ladda hem metadata
 url <- "http://api.kolada.se/v2/kpi/N07402"
@@ -157,12 +149,6 @@ Den här gången vill vi veta "Antal elever i förskoleklass i kommunal skola be
 ## Ladda hem metadata
 
 ```{r}
-# Exempel: Hämta data för individuell skola ------------------------
-
-# Hämta metadata för N11805
-# Antal elever i förskoleklass i kommunal skola belägen i kommunen. Uppgiften 
-# avser läsår, mätt 15 oktober
-
 
 # Ladda hem metadata
 url <- "http://api.kolada.se/v2/kpi/N11805"
@@ -184,7 +170,7 @@ dfmeta
 
 ## Leta upp OU-id.
 
-I GET-anropet till Kolada måste vi ange ett unikt ID-nummer för skolan - ett ou-id. Vi laddar in alla unika ou-ID:n för enheter som innehåller ordet "skola" i en dataframe enligt nedan:
+I GET-anropet till Kolada måste vi ange ett unikt ID-nummer för skolan - ett ou-ID. Vi laddar in alla unika ou-ID:n för enheter som innehåller ordet "skola" i en dataframe enligt nedan:
 
 ```{r}
 # Hämta lista på skol-id
@@ -249,38 +235,6 @@ dfobjekt
 
 url <- "http://api.kolada.se/v2/ou?"
 
-```
-
-## Lista alla enheter i hela riket
-
-Man kan även ladda hem en tabell över alla enheter i riket. Tyvärr returneras endast de 5000 första träffarna.
-
-
-```{r}
-
-# Ladda hem uppgifter om de 5000 första enheterna i riket
-url <- "http://api.kolada.se/v2/ou?"
-
-lresult <- content(GET(url))
-ltrans <- transpose(lresult$values)
-dfobjekt <- map_df(.x = ltrans, .f = simplify)
-
-dfobjekt
-
-# # A tibble: 5,000 x 3
-#    id            municipality title                       
-#    <chr>         <chr>        <chr>                       
-#  1 V15E011400101 0114         Runby skola                 
-#  2 V15E011400201 0114         Väsby skola                 
-#  3 V15E011400805 0114         Grimsta skola               
-#  4 V15E011401201 0114         Bollstanäs skola            
-#  5 V15E011401301 0114         Sverigefinska sk, Uppl Väsby
-#  6 V15E011401601 0114         Breddenskolan               
-#  7 V15E011402401 0114         Vittra Väsby                
-#  8 V15E011402801 0114         Södervikskolan              
-#  9 V15E011402901 0114         Odenskolan                  
-# 10 V15E011403001 0114         Frestaskolan                
-# # ... with 4,990 more rows
 ```
 
 
