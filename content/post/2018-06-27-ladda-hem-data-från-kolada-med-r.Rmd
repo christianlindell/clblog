@@ -152,7 +152,7 @@ df
 
 # Exempel 2: Ladda hem data för en individuell skola
 
-Den här gången vill vi veta "Antal elever i förskoleklass i kommunal skola belägen i kommunen. Uppgiften avser läsår, mätt 15 oktober". Den här gången är koden för indikatorn "N11805".
+Den här gången vill vi veta "Antal elever i förskoleklass i kommunal skola belägen i kommunen. Uppgiften avser läsår, mätt 15 oktober". Koden för indikatorn är "N11805".
 
 ## Ladda hem metadata
 
