@@ -66,12 +66,6 @@ library(tidyverse)
 
 # Ladda hem metadata ----------------------------------------------
 
-# Ta reda på vilken kpi-kod indikatorn har genom att gå in i kolladas
-# grafiska användargränssnitt och leta upp en indikator på lägsta nivån
-# i hierakin och klicka på informationsikonen (i). Koden syns överst i
-# pop-up-menyn. N07402 är till exempel koden för &quot;Anmälda brott om
-# grov kvinnofridskränkning per 100 000 invånare.
-
 library(httr)
 library(tidyverse)
 
@@ -131,7 +125,7 @@ df
 </div>
 <div id="exempel-2-ladda-hem-data-for-en-individuell-skola" class="section level1">
 <h1>Exempel 2: Ladda hem data för en individuell skola</h1>
-<p>Den här gången vill vi veta “Antal elever i förskoleklass i kommunal skola belägen i kommunen. Uppgiften avser läsår, mätt 15 oktober”. Liksom förra gången letar vi upp indikatorn i det grafiska användargränssnittet. Den här gången är koden för indikatorn “N11805”.</p>
+<p>Den här gången vill vi veta “Antal elever i förskoleklass i kommunal skola belägen i kommunen. Uppgiften avser läsår, mätt 15 oktober”. Den här gången är koden för indikatorn “N11805”.</p>
 <div id="ladda-hem-metadata-1" class="section level2">
 <h2>Ladda hem metadata</h2>
 <pre class="r"><code># Exempel: Hämta data för individuell skola ------------------------
@@ -156,9 +150,9 @@ dfmeta
 # # ... with 2 more variables: publication_date &lt;chr&gt;, title &lt;chr&gt;
 # &gt;</code></pre>
 </div>
-<div id="leta-upp-skol-id" class="section level2">
-<h2>Leta upp skol-id</h2>
-<p>I GET-anropet till Kolada måste vi ange ett unikt skol-id. Vi laddar in alla unika skolid:n i en dataframe enligt nedan:</p>
+<div id="leta-upp-ou-id." class="section level2">
+<h2>Leta upp OU-id.</h2>
+<p>I GET-anropet till Kolada måste vi ange ett unikt ID-nummer för skolan - ett ou-id. Vi laddar in alla unika ou-ID:n för enheter som innehåller ordet “skola” i en dataframe enligt nedan:</p>
 <pre class="r"><code># Hämta lista på skol-id
 
 url &lt;- &quot;http://api.kolada.se/v2/ou?title=skola&quot;
@@ -211,7 +205,36 @@ dfobjekt
 #  8 V15E128006301 1280         Bladins grundskola                   
 #  9 V15E128006305 1280         Bladins International School of Malmö
 # 10 V15E128006601 1280         Ängslättskolan                       
-# # ... with 362 more rows</code></pre>
+# # ... with 362 more rows
+
+url &lt;- &quot;http://api.kolada.se/v2/ou?&quot;</code></pre>
+</div>
+<div id="lista-alla-enheter-i-hela-riket" class="section level2">
+<h2>Lista alla enheter i hela riket</h2>
+<p>Man kan även ladda hem en tabell över alla enheter i riket. Tyvärr returneras endast de 5000 första träffarna.</p>
+<pre class="r"><code># Ladda hem uppgifter om de 5000 första enheterna i riket
+url &lt;- &quot;http://api.kolada.se/v2/ou?&quot;
+
+lresult &lt;- content(GET(url))
+ltrans &lt;- transpose(lresult$values)
+dfobjekt &lt;- map_df(.x = ltrans, .f = simplify)
+
+dfobjekt
+
+# # A tibble: 5,000 x 3
+#    id            municipality title                       
+#    &lt;chr&gt;         &lt;chr&gt;        &lt;chr&gt;                       
+#  1 V15E011400101 0114         Runby skola                 
+#  2 V15E011400201 0114         Väsby skola                 
+#  3 V15E011400805 0114         Grimsta skola               
+#  4 V15E011401201 0114         Bollstanäs skola            
+#  5 V15E011401301 0114         Sverigefinska sk, Uppl Väsby
+#  6 V15E011401601 0114         Breddenskolan               
+#  7 V15E011402401 0114         Vittra Väsby                
+#  8 V15E011402801 0114         Södervikskolan              
+#  9 V15E011402901 0114         Odenskolan                  
+# 10 V15E011403001 0114         Frestaskolan                
+# # ... with 4,990 more rows</code></pre>
 </div>
 <div id="ladda-hem-data-1" class="section level2">
 <h2>Ladda hem data</h2>
