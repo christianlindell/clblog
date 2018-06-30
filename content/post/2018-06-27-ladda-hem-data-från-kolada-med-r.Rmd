@@ -233,8 +233,6 @@ dfobjekt
 # 10 V15E128006601 1280         Ängslättskolan                       
 # # ... with 362 more rows
 
-url <- "http://api.kolada.se/v2/ou?"
-
 ```
 
 
