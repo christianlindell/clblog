@@ -17,6 +17,8 @@ Klona projektet och gör "skaparapport"-katalogen till working directory. Kör s
 
 Du behöver en del paket:
 
+* knitr
+* markdown
 * dplyr
 * tidyr
 * ggplot2
