@@ -1,0 +1,32 @@
+---
+title: Automatiserad rapportgenerering
+author: Christian Lindell
+date: '2018-07-30'
+slug: automatiserad-rapportgenerering
+categories:
+  - R
+tags:
+  - rapportgenerering
+---
+
+Jag har länge arbetat med automatgenererade rapporter. Tanken är att man ska kunna skapa unika rapporter som bygger på en gemensam mall i form av ett rmarkdown-dokument, men där man skapar en rapport för till exempel varje kommun i landet som beskriver utvecklingen i just den kommunen. I varje rapport skapas det diagram, tabeller och till viss del text som beskriver den utvalda kommunen. Rapporterna uppdateras genom att en bakomliggande databas uppdateras med statistik.
+
+Jag har fått en del frågor om hur man gör. Med anledning av det har jag skapat ett litet projekt på github som består av ett litet projekt som genererar 21 länsrapporter om sysselsättningsutvecklingen i varje län. Projektet demonstrerar också hur man skapar en innehållsförteckning och hur man får in en logga i ett html-dokument.
+
+Klona projektet och gör "skaparapport"-katalogen till working directory. Kör sedan filen "koer_markdown.R".
+
+Du behöver en del paket:
+
+* dplyr
+* tidyr
+* ggplot2
+* readxl
+* scales
+* stringr
+* stringi
+* janitor
+* pxweb
+
+och kanske ytterligare några som jag missat...
+
+Projektet finns på ![](https://github.com/christianlindell/skaparapport)
