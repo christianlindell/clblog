@@ -22,7 +22,7 @@ Om man vill ladda hem data anropas API:et med ett GET-anrop. Databasen nås på 
 
 En del indikatorer går att mäta på enhetsnivå, till exempel en enskild skola. I de fallen byts "municipality/kommunkod" ut mot "ou/enhetskod" ("ou" står förmodligen för "operational unit") och anropet sker till "http://api.kolada.se/v2/oudata".
 
-# Exempel 1 Våld mot kvinnor
+# Exempel 1: Våld mot kvinnor
 
 Nedan går jag igenom hur man hittar indikatorn som redovisar antalet fall av grov kvinnofridskränkning per 100 000 invånare, hur man hämtar hem metadata om variabeln och hur man slutligen laddar hem data.
 
