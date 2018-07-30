@@ -29,4 +29,4 @@ Du behöver en del paket:
 
 och kanske ytterligare några som jag missat...
 
-Projektet finns på ![](https://github.com/christianlindell/skaparapport)
+Projektet finns på [github](https://github.com/christianlindell/skaparapport)
