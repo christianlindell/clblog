@@ -11,7 +11,8 @@ tags:
 
 
 
-<p>Jag har länge arbetat med automatgenererade rapporter. Tanken är att man ska kunna skapa unika rapporter som bygger på en gemensam mall i form av ett rmarkdown-dokument, men där man skapar en rapport för till exempel varje kommun i landet som beskriver utvecklingen i just den kommunen. I varje rapport skapas det diagram, tabeller och till viss del text som beskriver den utvalda kommunen. Rapporterna uppdateras genom att en bakomliggande databas uppdateras med statistik.</p>
+<p>Om man jobbar som utredare ställs man ofta inför uppgiften att uppdatera rapporter eller ge ut flera rapporter med samma struktur, men som avhandlar olika geografier. Att göra EN rapport är ofta en spännande utmaning, men att för femte gången uppdatera en befintlig rapport med ny statistik, eller göra en rapport om en kommun som har exakt samma struktur som trettio tidigare kommunrapporter är mindre kul. Men det går att slippa undan mycket tråkigt, repetitivt arbete med hjälp av R och markdown.</p>
+<p>Jag har länge arbetat med automatgenererade rapporter. Tanken är att man ska kunna skapa unika rapporter som bygger på en gemensam mall i form av ett rmarkdown-dokument, men där man kan använda mallen för att skapa unika rapporter för till exempel varje kommun i ett län.. I varje rapport skapas det diagram, tabeller och till viss del text som beskriver den utvalda kommunen. Rapporterna uppdateras genom att en bakomliggande databas uppdateras med statistik.</p>
 <p>Jag har fått en del frågor om hur man gör. Med anledning av det har jag skapat ett projekt som genererar 21 länsrapporter om sysselsättningsutvecklingen i varje län och publicerat det på Github. Projektet demonstrerar också hur man skapar en innehållsförteckning och hur man får in en logga i ett html-dokument.</p>
 <p>Klona projektet och gör “skaparapport”-katalogen till working directory. Kör sedan filen “koer_markdown.R”.</p>
 <p>Du behöver en del paket:</p>
