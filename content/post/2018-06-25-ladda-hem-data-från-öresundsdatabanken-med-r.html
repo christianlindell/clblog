@@ -14,7 +14,7 @@ tags:
 
 <p>Det är Danmarks Statistik som driftar <a href="http://www.orestat.se/">Öresundsdatabasen</a> och det API som används är identiskt med det som Danmarks Statistik använder för sin egen statistikdatabas.</p>
 <p>Skillnaden mellan att använda API:et för Öresundsdatabasen och API:et för Danmarks Statistiks databas är att det är olika webbadresser till databasen och konsolen.</p>
-<p>Om man vill öppna konsolen som gäller den svenska/engelska versionen av Öresundsdatabasen används <a href="http://api.statbank.dk/s24/console" class="uri">http://api.statbank.dk/s24/console</a>, om man istället vill använda den danska/engelska varianten används <a href="http://api.statbank.dk/s23/console" class="uri">http://api.statbank.dk/s23/console</a>. Maunualen till API:et hittar du <a href="https://api.statbank.dk/console#subjects">här</a>.</p>
+<p>Om man vill öppna konsolen som gäller den svenska/engelska versionen av Öresundsdatabasen används <a href="http://api.statbank.dk/s24/console">http://api.statbank.dk/s24/console</a>, om man istället vill använda den danska/engelska varianten används <a href="http://api.statbank.dk/s23/console">http://api.statbank.dk/s23/console</a>. Maunualen till API:et hittar du <a href="https://api.statbank.dk/console#subjects">här</a>.</p>
 <p>Vi börjar med att ta fram en lista med alla användningsområden. Detta gör vi genom att anropa “<a href="http://api.statbank.dk/v1/s24/subjects" class="uri">http://api.statbank.dk/v1/s24/subjects</a>” enligt nedan:</p>
 <pre class="r"><code>library(jsonlite)
 library(httr)

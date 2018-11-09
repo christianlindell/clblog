@@ -1,0 +1,195 @@
+---
+title: Kartframställning med Simple Features (SF)
+author: Christian Lindell
+date: '2018-11-09'
+slug: kartframstallning-med-simple-features-sf
+categories:
+  - R
+tags:
+  - GIS
+---
+
+
+
+<div id="enkel-kartframstallning-med-ggplot2-och-simple-features-sf" class="section level1">
+<h1>Enkel kartframställning med ggplot2 och Simple Features (SF)</h1>
+<p>Jag är absolut ingen GIS-expert, men då och då behöver jag redovisa statistik på en karta. Sedan några år tillbaka har det blivit betydligt enklare i R i och med att Simple Features lancerats och fått stöd i ggplot2 och i dplyr.</p>
+<p>Vad är då sf? Sf är ett sätt att beskriva geografier som streck, punkter, polygoner m.m. Det som gör det hela speciellt trevligt att jobba med är att den geografiska informationen kopplas till data genom att den lagras i en listkolumn i en vanlig dataframe. En karta över alla Sveriges kommuners befolkning lagras som en dataframe med 290 rader + en listkolumn med geografiska data för varje kommun. Vi tänka oss att varje rad består av tre kolumner: Kommunkod och befolkning, men sist ligger även en list-kolumn (vanligtvis med namnet geometry). Eftersom det i grunden är en vanlig dataframe (fast med pålagd geografisk information) så kan den - nästan - hanteras som vilken dataframe som helst.</p>
+<p>Det jag tycker är den riktigt stora fördelen är att ggplot2 och dplyr har stöd för sf. Om vi tänker oss ovan nämnda sverigekarta så kan vi göra om den till en skånekarta genom ett enkelt filter-kommando i dplyr: filter(df_sverigekarta, substr(kom_kod, 1, 2) == “12”) - vilket tolkas som att man väljer alla kommuner vars kommunkod börjar med “12”, vilket innebär att de ligger i Skåne. Resultatet är en dataframe med 33 rader med en tillhörande geometry-kolumn. Geometry-kolumnen är “sticky”, dvs den behöver inte aktivt väljas utan hänger med i alla beräkningar.</p>
+<p>För att ha något att börja med så startar vi med att ladda hem en karta över alla Sveriges kommuner från SCB. Kartan är ganska hårt generaliserad och därmed ganska liten (&lt; 200 Kb), så den tar inte så stor plats på hårddisken. Kartan hamnar i en katalog med namnet map_kom i arbetskatalogen.</p>
+<pre class="r"><code>library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(sf)
+library(pxweb)
+library(scales)
+library(magrittr)
+library(janitor)
+
+
+download_map &lt;- TRUE
+
+# Don&#39;t download the map if it allready exists or if download_map is set to FALSE
+if (!file.exists(&quot;map_kom/Kommun_Sweref99TM_region.shp&quot;) &amp; download_map) {
+
+  # Laddar hem kartfiler från SCB
+  temp &lt;- tempfile()
+  download.file(&quot;https://www.scb.se/contentassets/3443fea3fa6640f7a57ea15d9a372d33/shape_svenska.zip&quot;,temp)
+  # Packar upp filerna med kommunkartan i working directory
+  unzip(temp, files = &quot;KommunSweref99TM.zip&quot;, exdir = paste0(getwd(),&quot;/map_kom&quot;))
+  unzip(zipfile = paste0(getwd(), &quot;/map_kom/KommunSweref99TM.zip&quot;),
+        exdir = paste0(getwd(), &quot;/map_kom&quot;))
+  # Tar bort tempfile
+  unlink(temp)
+  # Tar bort zip-arkivet med kommunkartan
+  file.remove(&quot;map_kom/KommunSweref99TM.zip&quot;)
+}</code></pre>
+<p>Nästa steg är att läsa in kartan i en dataframe med hjälp av funktionen st_read(). Kartan ligger lagrad som en shape-fil, men konverteras automatiskt till sf-format när den läses in med st_read (nästan alla funktioner i sf-paketet kan kännas igen genom att de börjar med “st_”). När vi läser in kartfilen i R så dyker det upp lite information om kartan. Vi ser till exempel vad kartfilen som läses in heter, vilken typ av geometrier den innehåller och vilken projektion kartan har. Här ser vi till exempel att koden för kartprojektionen är 3006. Om man behöver ange projektion till en karta så är det bra att veta att den vanligaste kartprojektionen för svenska kartor är sweref99, vilken har koden 3006. Google använder sig av en projektion som heter WSG84 och har koden 4326.</p>
+<pre class="r"><code>dfkom &lt;- st_read(&quot;map_kom/Kommun_Sweref99TM_region.shp&quot;)</code></pre>
+<pre><code>## Reading layer `Kommun_Sweref99TM_region&#39; from data source `C:\Users\chris\Documents\R\clblog\content\post\map_kom\Kommun_Sweref99TM_region.shp&#39; using driver `ESRI Shapefile&#39;
+## Simple feature collection with 290 features and 2 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 277247.6 ymin: 6133891 xmax: 917271.4 ymax: 7669870
+## epsg (SRID):    3006
+## proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs</code></pre>
+<p>Vi gör om variablerna från factor till character och döper om variablerna så att vi slipper stora bokstäver (Jag tycker det är hopplöst och hålla rätt på variabelnamn med blandade stora och små bokstäver. För mig är det dessutom icke-intuitiva namn. Jag skulle inte döpa en variabel till KnKod utan till komKod om jag skulle köra camel-case… men det är naturligtvis en personlig preferens.)</p>
+<pre class="r"><code>dfkom &lt;- mutate_if(dfkom, is.factor, as.character)
+
+
+# Fixa till variabelnamnen så att de blir lite enklare att skriva och komma ihåg
+dfkom &lt;- dplyr::rename(dfkom, kom_kod = KnKod, kommun_namn = KnNamn)</code></pre>
+<p>Nu har vi förhoppningsvis lyckats få in en kommunkarta i R. Nu laddar vi även hem lite sysselsättningsdata från SCB som vi kan ha att leka med. Vi använder oss av pxweb-paketet som beskrivit i ett tidigare inlägg. För att få varibelnamn som R accepterar så använder vi oss även av paketet “janitor” som har en “clean_names”-funktion som tar bort prickarna över svenska bokstäver, ersätter blanksteg med understreck och gör om stora bokstäver till små. Till slut separerar vi kommunkoden från kommunnamnet så att de hamnar i separata kolumner.</p>
+<pre class="r"><code>library(dplyr)
+library(tidyr)
+library(pxweb)
+library(janitor)
+
+dfsys &lt;-
+    pxweb::get_pxweb_data(url = &quot;http://api.scb.se/OV0104/v1/doris/sv/ssd/AM/AM0207/AM0207K/DagSNI07KonK&quot;,
+                   dims = list(Region = c(&#39;*&#39;),
+                               SNI2007 = c(&#39;*&#39;),
+                               Kon = c(&#39;*&#39;),
+                               ContentsCode = c(&#39;AM0207I6&#39;),
+                               Tid = c(&#39;2016&#39;)),
+                   clean = TRUE)
+dfsys &lt;- dplyr::mutate_if(dfsys, is.factor, as.character)
+dfsys &lt;- janitor::clean_names(dfsys)
+
+dfsys &lt;- dfsys %&gt;%
+  separate(region,
+           c(&quot;kom_kod&quot;, &quot;kommun_namn&quot;),
+           sep = &quot;\\s&quot;,
+           extra = &quot;merge&quot;)</code></pre>
+<p>Nu har vi fått fram en karta som ligger i dfkom och en dataframe med sysselsättning per kommun för 2016 som ligger i dfsys. Nu ska vi reducera antalet dimensioner i sysselsättningstabellen. Vi kommer inte att använda oss av kön eller näringsgren så vi tar bort de dimensionerna och aggregerar data så att vi får en siffra över total sysselsättning per kommun. Vi sparar dataframen i dfsys_tot.</p>
+<pre class="r"><code>dfsys_tot &lt;- dfsys %&gt;%
+  select(kom_kod, ar, ant_sys = values) %&gt;%
+  group_by(kom_kod, ar) %&gt;%
+  summarise(ant_sys = sum(ant_sys, nna.rm = TRUE)) %&gt;%
+  ungroup()</code></pre>
+<p>Nu har vi laddat hem både en karta och data, så nu kan vi äntligen börja testa lite kartritning! Till att börja med ser vi till att slå samman dfkom med dfsys, vilket vi gör med dplyrs left_join-funktion:</p>
+<pre class="r"><code>dfkom &lt;- dfkom %&gt;%
+  left_join(dfsys_tot, by = &quot;kom_kod&quot;)</code></pre>
+<p>Notera att dfkom nu har en ny kolumn med antal sysselsatta (ant_sys) som hämtats från dfsys:</p>
+<pre class="r"><code># dfkom
+
+# Simple feature collection with 290 features and 4 fields
+# geometry type:  MULTIPOLYGON
+# dimension:      XY
+# bbox:           xmin: 277247.6 ymin: 6133891 xmax: 917271.4 ymax: 7669870
+# epsg (SRID):    3006
+# proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+# First 10 features:
+#    kom_kod    kommun_namn   ar ant_sys                       geometry
+# 1     0114 Upplands Väsby 2016   15492 MULTIPOLYGON (((665740.7 65...
+# 2     0115     Vallentuna 2016    8987 MULTIPOLYGON (((682869.5 66...
+# 3     0117      Österåker 2016   10883 MULTIPOLYGON (((702182.4 66...
+# 4     0120         Värmdö 2016   12216 MULTIPOLYGON (((697991.6 65...
+# 5     0123       Järfälla 2016   26079 MULTIPOLYGON (((658883.7 65...
+# 6     0125          Ekerö 2016    8994 MULTIPOLYGON (((658561.5 65...
+# 7     0126       Huddinge 2016   45145 MULTIPOLYGON (((674526.6 65...
+# 8     0127       Botkyrka 2016   25557 MULTIPOLYGON (((663734.1 65...
+# 9     0128          Salem 2016    3136 MULTIPOLYGON (((652026.2 65...
+# 10    0136        Haninge 2016   28480 MULTIPOLYGON (((690235.4 65...</code></pre>
+<p>Nu skapar vi en kolumn med centroider (“mittpunkter”) i dfkom. Det gör vi med sf-funktionen st_centroid. Centroiderna ska vi senare använda för att lägga ut storleksproportionella cirklar på kommunkartan. Vi behöver inte ange projektion eftersom centroiderna “ärver” projektionen från kommunpolygongerna.</p>
+<pre class="r"><code>dfkom$centroider &lt;- st_centroid(dfkom$geometry)</code></pre>
+<p>Innan vi börjar rita kartor väljer vi ut enbart de kommuner som finns i Skåne så att vi får en hanterligare karta att arbeta med:</p>
+<pre class="r"><code>dfkom_skane = filter(dfkom, substr(kom_kod, 1, 2) %in% c(&quot;12&quot;))</code></pre>
+<p>Nu är det dag att börja rita kartor med R! Sedan version 3.0 är ggplot2 anpassat för att hantera kartor i sf-format och det finns ett geom_sf för att hantera sf-filer. Vi börjar med att bara rita ut en kommunkarta:</p>
+<pre class="r"><code># Rita karta med storleksproportionella cirklar
+p &lt;- ggplot(data = arrange(dfkom_skane, desc(ant_sys))) +
+  geom_sf(aes(geometry = geometry),
+          colour = &quot;darkgrey&quot;)
+
+p</code></pre>
+<p><img src="/post/2018-11-09-kartframstallning-med-simple-features-sf_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Som nästa steg lägger vi på storleksproportionella cirklar för att illustrera antal sysselsatta i varje kommun. Även det görs med geom_sf, men eftersom vi den här gången anger kolumnen med cenroider som geometry så förstår ggplot2 att det den här gången ska ritas upp cirklar:</p>
+<pre class="r"><code>p &lt;- p +
+  geom_sf(aes(geometry = centroider, size = ant_sys),
+          shape = 21,
+          fill = &quot;red&quot;,
+          alpha = 2/3,
+          colour = &quot;black&quot;,
+          show.legend = &quot;point&quot;)
+
+p</code></pre>
+<p><img src="/post/2018-11-09-kartframstallning-med-simple-features-sf_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>Kartan ser någorlunda ut, men går att snygga till. Vi kan börja med att öka storleken på den största cirkeln till 30 punkter. Vi kan även ta bort rutnätet och axlarna genom att använda theme_void(). Tyvärr försvinner inte rutnätet (vilket det borde göra!), men vi kan göra det osynligt genom att göra det transparent.</p>
+<pre class="r"><code># Rita karta med storleksproportionella cirklar
+library(scales)
+p &lt;- p + scale_size_area(max_size = 30,
+                  labels = scales::comma_format(accuracy = 1, big.mark = &quot; &quot;),
+                  breaks = c(25000, 50000, 75000)) +
+  theme_void() +
+  labs(
+    title = &quot;Dagbefolkning år 2016&quot;,
+    size = &quot;Sysselsatta i 1000-tal&quot;,
+    caption = &quot;Källa: SCB&quot;
+  ) +
+  guides(size = guide_legend(title.position = &quot;top&quot;)) +
+    theme(panel.grid = element_line(colour = &#39;transparent&#39;))
+
+p</code></pre>
+<p><img src="/post/2018-11-09-kartframstallning-med-simple-features-sf_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Personligen gillar jag inte ggplots teckenförklaring för cirklar. Jag tycker att den ser ful ut och dessutom är skrymmande. Jag föredrar att ange absolutvärden för cirklarna direkt på kartan.</p>
+<p>Vi tar bort därför bort teckenförklaringen och lägger istället in värdena i tusental i varje cirkel med hjälp av geom_sf_text. Vi ökar även storleken på cirklarna så att siffrorna som vi lägger in på kartan ryms inom cirklarna. Kartan behöver visas i lite större storlek än här, annars blir cirkeln för Malmö väl stor, men i övrigt är det en rätt ok karta.</p>
+<pre class="r"><code>p &lt;- p +
+   geom_sf_text(aes(geometry = centroider, label = number(ant_sys, accuracy = 0.1, scale = 0.001, decimal.mark = &quot;,&quot;)),
+               colour = &quot;white&quot;,
+               size = 3.5) +
+  scale_size_area(max_size = 55) +
+  theme(legend.position = &quot;none&quot;,
+        panel.grid = element_line(colour = &#39;transparent&#39;))
+
+p</code></pre>
+<p><img src="/post/2018-11-09-kartframstallning-med-simple-features-sf_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+<div id="och-nu-till-det-riktigt-coola-med-sf" class="section level1">
+<h1>… och nu till det riktigt coola med sf</h1>
+<p>Som jag skrev i början så är en sf-karta bara en vanlig dataframe med en ytterligare list-kolumn med geometriska data. Det innebär att geografin följer med när vi aggregerar data. Om vi aggregerar en dataframe med befolkningtal för kommuner upp till länsnivå så aggregeras även polygonerna!</p>
+<p>Den tidigare skapade dataframen dfkom innehåller bland annat variablerna kom_kod och ant_sys. Vi kan använda dem för att ta fram en länskarta med befolkningssiffror:</p>
+<pre class="r"><code>dflan &lt;- dfkom %&gt;% 
+  mutate(lan_kod = substr(kom_kod, 1 ,2)) %&gt;% 
+  group_by(lan_kod) %&gt;% 
+  summarise(ant_sys = sum(ant_sys, rm.na = TRUE)) %&gt;% 
+  ungroup()</code></pre>
+<p>Resultatet blir en dataframe med tre kolumner: lan_kod, ant_sys och geometry. dataframen innehåller 21 rader, dvs en rad för varje län. Vi gör en enkel koropletkarta som visar att vi verkligen fick fram en länskarta genom att aggregera värdena.</p>
+<pre class="r"><code>p &lt;- ggplot(data = dflan) +
+  geom_sf(aes(geometry = geometry, fill = ant_sys),
+          colour = &quot;lightgrey&quot;) +
+  scale_fill_viridis_c(labels = scales::comma_format(accuracy = 1,
+                                                     big.mark = &quot; &quot;,
+                                                     decimal.mark = &quot;,&quot;)) +
+  theme_void() +
+  theme(panel.grid = element_line(colour = &#39;transparent&#39;)) +
+  labs(
+    title = &quot;Antal sysselsatta 2016&quot;,
+    fill = &quot;Sysselsatta&quot;,
+    caption = &quot;Källa: SCB&quot;
+  )
+
+p</code></pre>
+<p><img src="/post/2018-11-09-kartframstallning-med-simple-features-sf_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>Det här var bara en ytterst översiktlig introduktion till sf. Det finns utmärkt dokumentation som följer med sf-paketet. Om man läser den för man en snabb introduktion till sf.</p>
+<p>I en kommande post tänker jag skriva om hur man anger buffertzoner m.m. i sf.</p>
+</div>
