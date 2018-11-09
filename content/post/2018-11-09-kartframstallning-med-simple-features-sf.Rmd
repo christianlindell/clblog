@@ -13,9 +13,9 @@ tags:
 
 Jag är absolut ingen GIS-expert, men då och då behöver jag redovisa statistik på en karta. Sedan några år tillbaka har det blivit betydligt enklare i R i och med att Simple Features lancerats och fått stöd i ggplot2 och i dplyr.
 
-Vad är då sf? Sf är ett sätt att beskriva geografier som streck, punkter, polygoner m.m. Det som gör det hela speciellt trevligt att jobba med är att den geografiska informationen kopplas till data genom att den lagras i en listkolumn i en vanlig dataframe. En karta över alla Sveriges kommuners befolkning lagras som en dataframe med 290 rader + en listkolumn med geografiska data för varje kommun. Vi tänka oss att varje rad består av tre kolumner: Kommunkod och befolkning, men sist ligger även en list-kolumn (vanligtvis med namnet geometry). Eftersom det i grunden är en vanlig dataframe (fast med pålagd geografisk information) så kan den - nästan - hanteras som vilken dataframe som helst.
+Vad är då sf? Sf är ett sätt att beskriva geografier som streck, punkter, polygoner m.m. Det som gör det hela speciellt trevligt att jobba med är att den geografiska informationen kopplas till data genom att den lagras i en listkolumn i en vanlig dataframe. En karta över alla Sveriges kommuners befolkning lagras som en dataframe med 290 rader + en listkolumn med geografiska data för varje kommun. Vi kan tänka oss att varje rad består av tre kolumner: Kommunkod och befolkning, men sist ligger även en list-kolumn (vanligtvis med namnet geometry). Eftersom det i grunden är en vanlig dataframe (fast med pålagd geografisk information) så kan den - nästan - hanteras som vilken dataframe som helst.
 
-Det jag tycker är den riktigt stora fördelen är att ggplot2 och dplyr har stöd för sf. Om vi tänker oss ovan nämnda sverigekarta så kan vi göra om den till en skånekarta genom ett enkelt filter-kommando i dplyr: filter(df_sverigekarta, substr(kom_kod, 1, 2) == "12") - vilket tolkas som att man väljer alla kommuner vars kommunkod börjar med "12", vilket innebär att de ligger i Skåne. Resultatet är en dataframe med 33 rader med en tillhörande geometry-kolumn. Geometry-kolumnen är "sticky", dvs den behöver inte aktivt väljas utan hänger med i alla beräkningar.
+Det jag tycker är den riktigt stora fördelen är att ggplot2 och dplyr har stöd för sf. Ovan nämnda sverigekarta kan göras om den till en skånekarta genom ett enkelt filter-kommando i dplyr: filter(df_sverigekarta, substr(kom_kod, 1, 2) == "12") - vilket tolkas som att man väljer alla kommuner vars kommunkod börjar med "12", vilket innebär att de ligger i Skåne. Resultatet är en dataframe med 33 rader med en tillhörande geometry-kolumn. Geometry-kolumnen är "sticky", dvs den behöver inte aktivt väljas utan hänger med i alla beräkningar.
 
 För att ha något att börja med så startar vi med att ladda hem en karta över alla Sveriges kommuner från SCB. Kartan är ganska hårt generaliserad och därmed ganska liten (< 200 Kb), så den tar inte så stor plats på hårddisken. Kartan hamnar i en katalog med namnet map_kom i arbetskatalogen.
 
@@ -220,9 +220,9 @@ p
 
 # ... och nu till det riktigt coola med sf
 
-Som jag skrev i början så är en sf-karta bara en vanlig dataframe med en ytterligare list-kolumn med geometriska data. Det innebär att geografin följer med när vi aggregerar data. Om vi aggregerar en dataframe med befolkningtal för kommuner upp till länsnivå så aggregeras även polygonerna!
+Som jag skrev i början så är en sf-karta bara en vanlig dataframe med en ytterligare list-kolumn med geometriska data. Det innebär att geografin följer med när vi aggregerar data. Om vi aggregerar upp en dataframe med sysselsatta per kommun till länsnivå så aggregeras även polygonerna!
 
-Den tidigare skapade dataframen dfkom innehåller bland annat variablerna kom_kod och ant_sys. Vi kan använda dem för att ta fram en länskarta med befolkningssiffror:
+Den tidigare skapade dataframen dfkom innehåller bland annat variablerna kom_kod och ant_sys. Vi kan använda dem för att ta fram en länskarta med antal sysselsatta:
 
 ```{r, message=F,  warning=FALSE}
 dflan <- dfkom %>% 
