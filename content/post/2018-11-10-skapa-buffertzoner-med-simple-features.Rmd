@@ -1,0 +1,334 @@
+---
+title: Skapa buffertzoner med Simple Features
+author: Christian Lindell
+date: '2018-11-10'
+slug: skapa-buffertzoner-med-simple-features
+categories:
+  - R
+tags:
+  - GIS
+---
+
+## Läs in en karta
+
+En vanligt syfte med en GIS-analys är att ta reda på hur många personer som finns inom ett visst avstånd från en målpunkt. Detta görs genom att skapa en buffertzon runt målpunkten. Alla som finns inom buffertzonen antas ha tillgång till målpunkten i motsats till de som befinner sig utanför buffertzonen. I och med stödet för Simple Features i R så är det relativt enkelt att göra denna typ av analyser.
+
+Liksom i förra inlägget börjar vi med att ladda ner en kommunkarta från SCB. Kommunkartan hamnar i katalogen map_kom i arbetskatalogen.
+
+
+```{r download_map, message=F,  warning=FALSE}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(sf)
+library(pxweb)
+library(scales)
+library(magrittr)
+library(janitor)
+
+set.seed(15)
+ 
+download_map <- TRUE
+
+# Don't download the map if it allready exists or if download_map is set to FALSE
+if (!file.exists("map_kom/Kommun_Sweref99TM_region.shp") & download_map) {
+
+  # Laddar hem kartfiler från SCB
+  temp <- tempfile()
+  download.file("https://www.scb.se/contentassets/3443fea3fa6640f7a57ea15d9a372d33/shape_svenska.zip",temp)
+  # Packar upp filerna med kommunkartan i working directory
+  unzip(temp, files = "KommunSweref99TM.zip", exdir = paste0(getwd(),"/map_kom"))
+  unzip(zipfile = paste0(getwd(), "/map_kom/KommunSweref99TM.zip"),
+        exdir = paste0(getwd(), "/map_kom"))
+  # Tar bort tempfile
+  unlink(temp)
+  # Tar bort zip-arkivet med kommunkartan
+  file.remove("map_kom/KommunSweref99TM.zip")
+}
+
+# Läs in kartan i R
+dfkom <- st_read("map_kom/Kommun_Sweref99TM_region.shp")
+
+# Ändra varibeltyp från factor till character.
+dfkom <- mutate_if(dfkom, is.factor, as.character)
+
+
+# Fixa till variabelnamnen så att de blir lite enklare att skriva och komma ihåg
+dfkom <- dplyr::rename(dfkom, kom_kod = KnKod, kommun_namn = KnNamn)
+
+# dfkom
+# Simple feature collection with 290 features and 2 fields
+# geometry type:  MULTIPOLYGON
+# dimension:      XY
+# bbox:           xmin: 277247.6 ymin: 6133891 xmax: 917271.4 ymax: 7669870
+# epsg (SRID):    3006
+# proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+# First 10 features:
+#    kom_kod    kommun_namn                       geometry
+# 1     0114 Upplands Väsby MULTIPOLYGON (((665740.7 65...
+# 2     0115     Vallentuna MULTIPOLYGON (((682869.5 66...
+# 3     0117      Österåker MULTIPOLYGON (((702182.4 66...
+# 4     0120         Värmdö MULTIPOLYGON (((697991.6 65...
+# 5     0123       Järfälla MULTIPOLYGON (((658883.7 65...
+# 6     0125          Ekerö MULTIPOLYGON (((658561.5 65...
+# 7     0126       Huddinge MULTIPOLYGON (((674526.6 65...
+# 8     0127       Botkyrka MULTIPOLYGON (((663734.1 65...
+# 9     0128          Salem MULTIPOLYGON (((652026.2 65...
+# 10    0136        Haninge MULTIPOLYGON (((690235.4 65...
+
+```
+
+
+Nu är kommunkartan inläst i en dataframe med namnet dfkom. Vi filterar ut endast de kommuner som tillhör Skåne för att få en lite mera hanterlig karta.
+
+```{r, message=F,  warning=FALSE}
+lan_nr <- c("12")
+
+dfkom_urval <- filter(dfkom, substr(kom_kod, 1, 2) %in% as.character(lan_nr))
+```
+
+
+## Skapa punkter
+
+Nu är det dags att ta fram lite punkter som kan användas för att skapa buffertzoner. Vi skapar en uppsättning punkter som vi kallar för "skolor" och en annan uppsättning punkter som vi kallar för "elever". Uppgiften blir sedan att ta reda på hur många av eleverna som bor inom 10 km från en skola.
+
+Vi börjar med att skapa 150 punkter med slumpvisa koordinater som får föreställer elever. Vi slumpar fram koordinater som håller sig inom ramarna för kartan. Kartans gränser för vi reda på med hjälp av funktionen st_bbox som ger oss koordinaterna för hörnen i en rektangel som dras runt kartan.
+
+```{r, message=F,  warning=FALSE}
+n <- 150
+
+dfelev <- data_frame(
+    reg = paste0("elev_", 1:n),
+    longitude = runif(n, st_bbox(dfkom_urval)$xmin, st_bbox(dfkom_urval)$xmax),
+    latitude = runif(n, st_bbox(dfkom_urval)$ymin, st_bbox(dfkom_urval)$ymax)
+)
+
+# Gör om koordinatrena i dfelev till ett point-GEOMETRY-objekt i en sf-dataframe.
+dfelev <- st_as_sf(dfelev, coords = c("longitude", "latitude"))
+# Ange projektion. 3006 motsvarar SWEREF99
+st_crs(dfelev) <- 3006
+
+# dfelev
+# Simple feature collection with 150 features and 1 field
+# geometry type:  POINT
+# dimension:      XY
+# bbox:           xmin: 344220.2 ymin: 6134529 xmax: 474320.4 ymax: 6264501
+# epsg (SRID):    3006
+# proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+# > dfelev
+# Simple feature collection with 150 features and 1 field
+# geometry type:  POINT
+# dimension:      XY
+# bbox:           xmin: 344220.2 ymin: 6134529 xmax: 474320.4 ymax: 6264501
+# epsg (SRID):    3006
+# proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+# # A tibble: 150 x 2
+#    reg               geometry
+#    <chr>          <POINT [m]>
+#  1 elev_1  (422267.5 6172525)
+#  2 elev_2  (368531.9 6234328)
+#  3 elev_3    (470363 6218354)
+#  4 elev_4  (428708.2 6253734)
+#  5 elev_5  (391240.6 6244924)
+#  6 elev_6    (473320 6232026)
+#  7 elev_7  (450395.1 6155388)
+#  8 elev_8  (376310.3 6255644)
+#  9 elev_9  (433503.4 6263020)
+# 10 elev_10 (452538.3 6210276)
+
+```
+
+
+Nu har vi skapat en dataframe med punktkoordinater i en GEOMETRY-kolumn som
+kan användas för beräkningar med hjälp av sf och ritas av ggplot2. Vi testar att det fungerar genom att rita upp en skånekarta med punkterna inlagda.
+
+```{r, message=F,  warning=FALSE}
+ggplot() +
+    geom_sf(data = dfkom_urval,
+            aes(geometry = geometry),
+            colour = "darkgrey") +
+    geom_sf(data = dfelev, size = 2, shape = 21, fill = "darkred")
+```
+
+
+## Koppla punkterna till kartinformation med st_join
+
+En hel del elever hamnar i havet. Vi börjar med att göra en "spatial join"
+mellan dataframen med elevkoordinater och kommunkartan. Sammanslagningen av
+sker att koppla polygonerna i dfkom_urval till punkterna i dfelev. Sf-funktionen st_join kopplar punkterna till den polygon (kommun) de är belägna inom. 
+
+
+```{r, message=F,  warning=FALSE}
+
+dfelev <- dfelev %>%
+    st_join(dfkom_urval)
+
+# dfelev
+# reg kom_kod     kommun_namn                 geometry
+# 1   elev_1  1270  Tomelilla   POINT (436341 6162475)
+# 2   elev_2  1281       Lund POINT (400558.6 6163463)
+# 3   elev_3  <NA>       <NA> POINT (369186.8 6186089)
+# 4   elev_4  1273       Osby POINT (444042.1 6262827)
+
+```
+
+
+De elever som har NA som kommunnamn (vilket oftast beror på att punkterna råkat hamna i havet) filterar vi bort:
+
+```{r, message=F,  warning=FALSE}
+dfelev <- filter(dfelev, !is.na(kommun_namn))
+```
+
+På motsvarande sätt som för eleverna skapar vi koordinater för ett antal
+fiktiva skolor
+
+```{r, message=F,  warning=FALSE}
+
+n <- 25
+
+dfskola <- data_frame(
+    reg = paste0("skola_", 1:n),
+    longitude = runif(n, st_bbox(dfkom_urval)$xmin, st_bbox(dfkom_urval)$xmax),
+    latitude = runif(n, st_bbox(dfkom_urval)$ymin, st_bbox(dfkom_urval)$ymax)
+)
+
+dfskola <- st_as_sf(dfskola, coords = c("longitude", "latitude"))
+st_crs(dfskola) <- 3006
+
+dfskola <- dfskola %>%
+    st_join(dfkom_urval) %>%
+    filter(!is.na(kommun_namn))
+```
+
+Nu testar vi att kartan och punkterna fungerar genom att rita en karta:
+
+```{r, message=F,  warning=FALSE}
+ggplot() +
+    geom_sf(data = dfkom_urval,
+            aes(geometry = geometry),
+            colour = "darkgrey") +
+    geom_sf(data = dfelev, size = 2, shape = 21, fill = "darkred") +
+    geom_sf(data = dfskola, size = 3, shape = 21, fill = "lightgreen")
+```
+
+## Skapa buffertzoner
+
+Beräkna bufferzon runt varje skola.
+
+```{r, message=F,  warning=FALSE}
+
+
+# Ange buffertzon i km:
+buffert <- 10
+
+# Beräkna buffertzon:
+skolbuffer <- st_buffer(dfskola, dist = buffert * 1000)
+
+# returvärdet är ett list-objekt:
+lskola5km <- st_intersects(x = dfelev, y = skolbuffer)
+```
+
+Listobjektet lskola5km innehåller ett värde för varje elev. Om värdet är NULL finns eleven inte
+inom buffertzonen för någon skola. Om eleven har ett värde bor eleven inom
+buffertzonen för en skola. Nedanstående kodrad testar om eleven har ett värde
+(= TRUE) eller inte (=FALSE) och skapar en vektor med logiska värden som
+kan användas för att sortera ut de elever som finns inom buffertzonen runt
+skola
+
+```{r, message=F,  warning=FALSE}
+skola5km_index <- lskola5km %>% purrr::map_lgl(~ length(.) > 0)
+```
+
+Sortera ut elever som bor i buffertzonen runt skolor.
+
+```{r, message=F,  warning=FALSE}
+
+dfelev5km <- dfelev[skola5km_index, ]
+
+# Det finns totalt 24 elever inom 10 km från en skola:
+
+# dfelev5km
+# Simple feature collection with 24 features and 3 fields
+# geometry type:  POINT
+# dimension:      XY
+# bbox:           xmin: 373482.2 ymin: 6141335 xmax: 448881.6 ymax: 6234344
+# epsg (SRID):    3006
+# proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+# First 10 features:
+#        reg kom_kod  kommun_namn                 geometry
+# 1   elev_1    1265        Sjöbo POINT (422267.5 6172525)
+# 8  elev_12    1293   Hässleholm POINT (428080.6 6225862)
+# 15 elev_21    1291   Simrishamn POINT (448881.6 6174733)
+# 21 elev_30    1285        Eslöv POINT (405668.5 6179147)
+# 25 elev_36    1286        Ystad POINT (429628.7 6147574)
+# 27 elev_38    1267         Höör POINT (410891.3 6202773)
+# 31 elev_42    1287   Trelleborg POINT (403168.4 6141335)
+# 33 elev_46    1285        Eslöv POINT (399438.2 6181311)
+# 38 elev_53    1290 Kristianstad POINT (444231.9 6198258)
+# 44 elev_60    1214       Svalöv POINT (378891.9 6206550)
+```
+
+Nu ritar vi en karta med skolor och elever samt buffertzonen runt varje skola. Vi lägger en lite större ljusröd punkt bakom punkterna för de elever som finns inom buffertzonen för en skola så att de sticker ut.
+
+```{r, message=F,  warning=FALSE}
+p <- ggplot() +
+  geom_sf(data = dfkom_urval,
+          aes(geometry = geometry),
+          colour = "darkgrey", ) +
+  # st_union slår samman överlappande buffertzoner
+  geom_sf(data = st_union(skolbuffer),
+          aes(geometry = geometry),
+          colour = "black",
+          fill = "red",
+          alpha = 1/6) +
+  geom_sf(data = dfskola, size = 3, shape = 23, fill = "lightgreen") +
+  geom_sf(data = dfelev5km, size = 4, colour = "red") +
+  geom_sf(data = dfelev, size = 3, shape = 21, fill = "black") +
+  theme_bw() +
+  labs(
+    title = paste0("Elever som har en skola inom ", buffert, " km (fiktiva värden)"),
+    subtitle = paste0("Grön romb: Skola, Svart punkt: Elev: Svart punkt m röd ",
+                      "ytterkant: \nElev inom ", buffert,  " km från skola"),
+    caption = "Källa: Karta från SCB",
+    x = "longitud",
+    y = "latitud"
+  )
+
+p
+```
+
+Snyggt! Men det känns lite onödigt med rutnät och angivelser av longitud
+och latitud. De går att avlägsna med hjälp av theme_void. Egentligen borde
+även rutnätet försvinna, men det gör det inte av någon anledning. I stället får
+man göra det genomskinligt enligt nedan:
+
+```{r, message=F,  warning=FALSE}
+p +
+  theme_void() +
+  theme(panel.grid = element_line(colour = 'transparent'))
+```
+
+Personligen föredrar jag dock kartan utan utritade buffertzoner:
+
+```{r, message=F,  warning=FALSE}
+p <- ggplot() +
+  geom_sf(data = dfkom_urval,
+          aes(geometry = geometry),
+          colour = "darkgrey", ) +
+  # st_union slår samman överlappande buffertzoner
+  geom_sf(data = dfskola, size = 3, shape = 23, fill = "lightgreen") +
+  geom_sf(data = dfelev5km, size = 4, colour = "red") +
+  geom_sf(data = dfelev, size = 3, shape = 21, fill = "black") +
+  theme_void() +
+  theme(panel.grid = element_line(colour = 'transparent')) + 
+  labs(
+    title = paste0("Elever som har en skola inom ", buffert, " km (fiktiva värden)"),
+    subtitle = paste0("Grön romb: Skola, Svart punkt: Elev: Svart punkt m röd ",
+                      "ytterkant: \nElev inom ", buffert,  " km från skola"),
+    caption = "Källa: Karta från SCB"
+  )
+
+p
+
+```

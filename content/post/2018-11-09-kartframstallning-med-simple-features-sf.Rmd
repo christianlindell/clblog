@@ -30,6 +30,8 @@ library(scales)
 library(magrittr)
 library(janitor)
 
+set.seed(15)
+
 
 download_map <- TRUE
 
