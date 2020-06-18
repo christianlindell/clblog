@@ -21,7 +21,6 @@ d <- pxweb_interactive("api.scb.se")
 
 Nu har vi startat en interaktiv session där vi med hjälp av menyval i konsolfönstret bygger frågan vi ska skicka till SCB:s databas:
 
-
 ```{r, eval=FALSE}
 ==============================================================
  R PXWEB: Content of 'api.scb.se'
