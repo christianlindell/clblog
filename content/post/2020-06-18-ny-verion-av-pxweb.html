@@ -1,0 +1,261 @@
+---
+title: Ny verion av pxweb
+author: Christian Lindell
+date: '2020-06-18'
+slug: ny-verion-av-pxweb
+categories:
+  - R
+tags:
+  - pxweb
+---
+
+
+
+<p>Det första inlägget jag skrev på den här bloggen handlade om att ladda hem data med hjälp av pxweb-paketet. Sedan dess har det kommit en ny version av pxweb. Den gamla koden jag publicerat fungerar fortfarande, men den nya versionen fungerar annorlunda än den gamla: Koden som genereras ser annorlunda ut och ny funktionalitet har tillkommit. Det allra bästa med den nya versionen är att det går att hoppa över dimensioner. Vill man bara ha befolkning per kommun så kan man till exempel välja att inte ladda ner civilstånd och kön. Tidigare fick man plocka hem alla dimenstioner som fanns i tabellen hos SCB, för att därefter aggregera lokalt i R.</p>
+<pre class="r"><code># Börja med att starta i interaktivt läge
+library(pxweb)
+
+d &lt;- pxweb_interactive(&quot;api.scb.se&quot;)</code></pre>
+<p>Nu har vi startat en interaktiv session där vi med hjälp av menyval i konsolfönstret bygger frågan vi ska skicka till SCB:s databas:</p>
+<pre class="r"><code>==============================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+==============================================================
+ [ 1 ] : v1
+==============================================================
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;i&#39; = Show id)
+1: 1</code></pre>
+<p>Skriv in siffran “1” för att välja att du vill ha version 1 av api:et (ett enkelt val eftersom det är det enda alternativet). Därefter väljer man språk.</p>
+<pre class="r"><code>=============================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+          at &#39;/OV0104/v1&#39;
+=============================================================
+ [ 1 ] : en
+ [ 2 ] : sv
+=============================================================
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;i&#39; = Show id)
+1: 2</code></pre>
+<p>Jag väljer att jag vill ha svenska som språk genom att trycka på 2 och enter. Därefter väljer jag alternativ 1 för att komma till statistikdatabasen.</p>
+<pre class="r"><code>=============================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+          at &#39;/OV0104/v1/doris/sv&#39;
+=============================================================
+ [ 1 ] : Statistikdatabasen
+=============================================================
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;i&#39; = Show id)
+1: 1</code></pre>
+<p>Efter att ha valt statistikdatabasen kommer vi in i SCB:s öppna databas. Som default visas bara de översta och den nedersta valmöjligheterna. Vill man se alla möjliga val får man trycka på “a” och enter.</p>
+<pre class="r"><code>======================================================================================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+          at &#39;/OV0104/v1/doris/sv/ssd&#39;
+======================================================================================================================
+ [  1 ] : Ämnesövergripande statistik
+ [  2 ] : Arbetsmarknad
+ [  3 ] : Befolkning
+ [  4 ] : Boende, byggande och bebyggelse
+
+ [ 18 ] : Priser och konsumtion
+ [ 19 ] : Socialtjänst
+ [ 20 ] : Transporter och kommunikationer
+ [ 21 ] : Utbildning och forskning
+======================================================================================================================
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;a&#39; = Show all, &#39;i&#39; = Show id)
+1: 3</code></pre>
+<p>Vi väljer “3” (Befolkning) och därefter “2” (Befolningsstatistik). Då kommer vi in i följande meny:</p>
+<pre class="r"><code>======================================================================================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+          at &#39;/OV0104/v1/doris/sv/ssd/BE/BE0101&#39;
+======================================================================================================================
+ [  1 ] : Folkmängd
+ [  2 ] : Medelålder
+ [  3 ] : Befolkningstäthet
+ [  4 ] : Medelfolkmängd
+
+ [ 17 ] : Adopterade
+ [ 18 ] : Cirkulär migration
+ [ 19 ] : Nyckeltal
+ [ 20 ] : DeSo
+======================================================================================================================
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;a&#39; = Show all, &#39;i&#39; = Show id)
+1: 1</code></pre>
+<p>Här väljer jag “1” (Folkmängd) och därefter “1” igen (Folkmängden efter region, civilstånd, ålder och kön. År 1968 - 2019). Nu är vi inne i den tabell vi vill plocka ut data ifrån.</p>
+<pre class="r"><code>======================================================================================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+          at &#39;/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy&#39;
+   TABLE: Folkmängden efter region, civilstånd, ålder, kön, tabellinnehåll och år
+VARIABLE: [[Region]], Civilstand, Alder, Kon, ContentsCode, Tid
+======================================================================================================================
+ [   1 ] : Riket
+ [   2 ] : Stockholms län
+ [   3 ] : Upplands Väsby
+ [   4 ] : Vallentuna
+
+ [ 309 ] : Piteå
+ [ 310 ] : Boden
+ [ 311 ] : Haparanda
+ [ 312 ] : Kiruna
+======================================================================================================================
+Enter one or more choices:
+Separate multiple choices by &#39;,&#39; and intervals of choices by &#39;:&#39;
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;*&#39; = Select all, &#39;a&#39; = Show all, &#39;e&#39; = Eliminate, &#39;i&#39; = Show id)
+1: a</code></pre>
+<p>Jag väljer att trycka på “a” för att visa alla regioner som kan väljas (här visas bara nederdelen av de menyval som kan göras):</p>
+<pre class="r"><code>[ 296 ] : Lycksele
+ [ 297 ] : Skellefteå
+ [ 298 ] : Norrbottens län
+ [ 299 ] : Arvidsjaur
+ [ 300 ] : Arjeplog
+ [ 301 ] : Jokkmokk
+ [ 302 ] : Överkalix
+ [ 303 ] : Kalix
+ [ 304 ] : Övertorneå
+ [ 305 ] : Pajala
+ [ 306 ] : Gällivare
+ [ 307 ] : Älvsbyn
+ [ 308 ] : Luleå
+ [ 309 ] : Piteå
+ [ 310 ] : Boden
+ [ 311 ] : Haparanda
+ [ 312 ] : Kiruna
+======================================================================================================================
+Enter one or more choices:
+Separate multiple choices by &#39;,&#39; and intervals of choices by &#39;:&#39;
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;*&#39; = Select all, &#39;e&#39; = Eliminate, &#39;i&#39; = Show id)
+1: 1,107:139</code></pre>
+<p>Vid promten skriver jag in 1,107:139, vilket innebär att jag väljer riket samt alla kommuner i Skåne. Nästa meny handlar om att välja vilka civilstånd man vill plocka ut data för. Eftersom jag inte är intresserad av den dimensionen så trycker jag på “e” för att eliminera den dimensionen.</p>
+<pre class="r"><code>======================================================================================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+          at &#39;/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy&#39;
+   TABLE: Folkmängden efter region, civilstånd, ålder, kön, tabellinnehåll och år
+VARIABLE: Region, [[Civilstand]], Alder, Kon, ContentsCode, Tid
+======================================================================================================================
+ [ 1 ] : ogifta
+ [ 2 ] : gifta
+ [ 3 ] : skilda
+ [ 4 ] : änkor/änklingar
+======================================================================================================================
+Enter one or more choices:
+Separate multiple choices by &#39;,&#39; and intervals of choices by &#39;:&#39;
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;*&#39; = Select all, &#39;e&#39; = Eliminate, &#39;i&#39; = Show id)
+1: e</code></pre>
+<p>Därefter kommer en meny för att välja åldrar. Jag väljer att se alla åldrar, vilket sker genom att skriva “102” och enter. Eftersom jag vill välja både män och kvinnor skriver jag en asterix "*" och trycker på enter.</p>
+<pre class="r"><code>======================================================================================================================
+ R PXWEB: Content of &#39;api.scb.se&#39;
+          at &#39;/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy&#39;
+   TABLE: Folkmängden efter region, civilstånd, ålder, kön, tabellinnehåll och år
+VARIABLE: Region, Civilstand, Alder, [[Kon]], ContentsCode, Tid
+======================================================================================================================
+ [ 1 ] : män
+ [ 2 ] : kvinnor
+======================================================================================================================
+Enter one or more choices:
+Separate multiple choices by &#39;,&#39; and intervals of choices by &#39;:&#39;
+(&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;*&#39; = Select all, &#39;e&#39; = Eliminate, &#39;i&#39; = Show id)
+1: *</code></pre>
+<p>I nästa meny väljer jag alternativ 1 (Folkmängd). I nästa meny väljer man vilket år data ska avse och där väljer jag att hämta data för 2019, vilket är alternativ 52. I och med det så har jag gjort alla val av data som behövs. Nu återstår några sista val som rör hur tabellen ska hämtas hem. Jag väljer att hämta hem data och printa koden som behövs för nedladdningen i konsolen:</p>
+<pre class="r"><code>Do you want to print code to query and download data?
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;y&#39; = Yes, &#39;n&#39; = No)
+1: y</code></pre>
+<p>Därefter väljer jag att parametrarena i frågan till SCB:s databas ska sparas i list-format och inte i json:</p>
+<pre class="r"><code>Do you want to print query in json format (otherwise query is printed as an R list)?
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;y&#39; = Yes, &#39;n&#39; = No)
+1: n</code></pre>
+<p>Därefter väljer jag att ladda ner data (y):</p>
+<pre class="r"><code>Do you want to download the data?
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;y&#39; = Yes, &#39;n&#39; = No)
+1: y</code></pre>
+<p>Jag vill även att data ska sparas i en dataframe:</p>
+<pre class="r"><code>Do you want to return a the data as a data.frame?
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;y&#39; = Yes, &#39;n&#39; = No)
+1: y</code></pre>
+<p>Jag laddar inte hem citattexten för tabellen.</p>
+<pre class="r"><code>Do you want to print citation for the data?
+Enter your choice:
+(&#39;esc&#39; = Quit, &#39;y&#39; = Yes, &#39;n&#39; = No)
+1: n</code></pre>
+<p>Nu printas det ut en lång rad kod i konsolen som man kan klippa ut och klistra in i editorn i R:</p>
+<pre class="r"><code># PXWEB query 
+pxweb_query_list &lt;- 
+  list(&quot;Region&quot;=c(&quot;00&quot;,&quot;1214&quot;,&quot;1230&quot;,&quot;1231&quot;,&quot;1233&quot;,&quot;1256&quot;,&quot;1257&quot;,&quot;1260&quot;,&quot;1261&quot;,&quot;1262&quot;,&quot;1263&quot;,&quot;1264&quot;,&quot;1265&quot;,&quot;1266&quot;,&quot;1267&quot;,&quot;1270&quot;,&quot;1272&quot;,&quot;1273&quot;,&quot;1275&quot;,&quot;1276&quot;,&quot;1277&quot;,&quot;1278&quot;,&quot;1280&quot;,&quot;1281&quot;,&quot;1282&quot;,&quot;1283&quot;,&quot;1284&quot;,&quot;1285&quot;,&quot;1286&quot;,&quot;1287&quot;,&quot;1290&quot;,&quot;1291&quot;,&quot;1292&quot;,&quot;1293&quot;),
+       &quot;Alder&quot;=c(&quot;tot&quot;),
+       &quot;Kon&quot;=c(&quot;1&quot;,&quot;2&quot;),
+       &quot;ContentsCode&quot;=c(&quot;BE0101N1&quot;),
+       &quot;Tid&quot;=c(&quot;2019&quot;))
+
+# Download data 
+px_data &lt;- 
+  pxweb_get(url = &quot;http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy&quot;,
+            query = pxweb_query_list)
+
+# Convert to data.frame 
+px_data &lt;- as.data.frame(px_data, column.name.type = &quot;text&quot;, variable.value.type = &quot;text&quot;)</code></pre>
+<p>Nu har vi laddat hem befolkningsdata för 2019 för de valda regionerna och sparat dem i dataframen px_data:</p>
+<pre class="r"><code>head(px_data)
+        region        ålder     kön   år Folkmängd
+1        Riket totalt ålder     män 2019   5195814
+2        Riket totalt ålder kvinnor 2019   5131775
+3       Svalöv totalt ålder     män 2019      7475
+4       Svalöv totalt ålder kvinnor 2019      6793
+5 Staffanstorp totalt ålder     män 2019     12589
+6 Staffanstorp totalt ålder kvinnor 2019     12807</code></pre>
+<p>En sak kan ställa till problem om man jämför med den gamla versionen av pxweb. Som framgår av tabellen ovan så är alla variabler i klartext. Men ibland vill man ha variabelkoderna istället - till exempel kommunkoder. Om vi modifierar koden för att ladda hem data lite grand kan vi spara data med variabler i klartext i en dataframe och varialer i kodform i en annan:</p>
+<pre class="r"><code># PXWEB query 
+pxweb_query_list &lt;- 
+  list(&quot;Region&quot;=c(&quot;00&quot;,&quot;1214&quot;,&quot;1230&quot;,&quot;1231&quot;,&quot;1233&quot;,&quot;1256&quot;,&quot;1257&quot;,&quot;1260&quot;,&quot;1261&quot;,&quot;1262&quot;,&quot;1263&quot;,&quot;1264&quot;,&quot;1265&quot;,&quot;1266&quot;,&quot;1267&quot;,&quot;1270&quot;,&quot;1272&quot;,&quot;1273&quot;,&quot;1275&quot;,&quot;1276&quot;,&quot;1277&quot;,&quot;1278&quot;,&quot;1280&quot;,&quot;1281&quot;,&quot;1282&quot;,&quot;1283&quot;,&quot;1284&quot;,&quot;1285&quot;,&quot;1286&quot;,&quot;1287&quot;,&quot;1290&quot;,&quot;1291&quot;,&quot;1292&quot;,&quot;1293&quot;),
+       &quot;Alder&quot;=c(&quot;tot&quot;),
+       &quot;Kon&quot;=c(&quot;1&quot;,&quot;2&quot;),
+       &quot;ContentsCode&quot;=c(&quot;BE0101N1&quot;),
+       &quot;Tid&quot;=c(&quot;2019&quot;))
+
+# Download data 
+px_data &lt;- 
+  pxweb_get(url = &quot;http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy&quot;,
+            query = pxweb_query_list)
+
+# Convert to data.frame 
+dfklartext &lt;- as.data.frame(px_data, column.name.type = &quot;text&quot;, variable.value.type = &quot;text&quot;)
+
+# Notera att jag ändrat variable.value.type från &quot;text&quot; till &quot;code&quot; nedan.
+dfkoder &lt;- as.data.frame(px_data, column.name.type = &quot;text&quot;, variable.value.type = &quot;code&quot;)</code></pre>
+<p>Nu finns alla värden med variabler i klartext i dfklartext medan alla värden med variabler i kodformat finns i df koder. Om jag tittar på dfkoder ser tabellen ut så här:</p>
+<pre class="r"><code>head(dfkoder)
+  region ålder kön   år Folkmängd
+1     00   tot   1 2019   5195814
+2     00   tot   2 2019   5131775
+3   1214   tot   1 2019      7475
+4   1214   tot   2 2019      6793
+5   1230   tot   1 2019     12589
+6   1230   tot   2 2019     12807</code></pre>
+<p>Regionkoderna finns laddade i den första kolumnen. Om jag vill ha en tabell med både regionkoder och regionnamn kan jag hämta koderna från dfkoder och slå samman dem med dfklartext:</p>
+<pre class="r"><code>library(dplyr)
+
+dfkoder_klartext &lt;- bind_cols(dfkoder[1], dfklartext)
+
+head(dfkoder_klartext)
+  region...1   region...2        ålder     kön   år Folkmängd
+1         00        Riket totalt ålder     män 2019   5195814
+2         00        Riket totalt ålder kvinnor 2019   5131775
+3       1214       Svalöv totalt ålder     män 2019      7475
+4       1214       Svalöv totalt ålder kvinnor 2019      6793
+5       1230 Staffanstorp totalt ålder     män 2019     12589
+6       1230 Staffanstorp totalt ålder kvinnor 2019     12807</code></pre>
+<p>Eftersom “region” fanns som variabelnamn bägge tabellerna döps de om till “region…1” och “region…2” i den sammanslagna tabellen. Vi kan skapa bättre namn med hjälp av “rename”.</p>
+<pre class="r"><code>dfkoder_klartext &lt;- dfkoder_klartext %&gt;% 
+  rename(reg_kod = region...1, reg_namn = region...2)
+
+head(dfkoder_klartext)
+  reg_kod     reg_namn        ålder     kön   år Folkmängd
+1      00        Riket totalt ålder     män 2019   5195814
+2      00        Riket totalt ålder kvinnor 2019   5131775
+3    1214       Svalöv totalt ålder     män 2019      7475
+4    1214       Svalöv totalt ålder kvinnor 2019      6793
+5    1230 Staffanstorp totalt ålder     män 2019     12589
+6    1230 Staffanstorp totalt ålder kvinnor 2019     12807</code></pre>
