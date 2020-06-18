@@ -30,8 +30,6 @@ library(scales)
 library(magrittr)
 library(janitor)
 
-set.seed(15)
-
 
 download_map <- TRUE
 
@@ -101,7 +99,7 @@ Nu har vi fått fram en karta som ligger i dfkom och en dataframe med sysselsät
 
 ```{r, message=F,  warning=FALSE}
 dfsys_tot <- dfsys %>%
-  select(kom_kod, ar, ant_sys = values) %>%
+  select(kom_kod, ar = tid, ant_sys = values) %>%
   group_by(kom_kod, ar) %>%
   summarise(ant_sys = sum(ant_sys, nna.rm = TRUE)) %>%
   ungroup()
@@ -179,26 +177,34 @@ p <- p +
 p
 ```
 
-Kartan ser någorlunda ut, men går att snygga till. Vi kan börja med att öka storleken på den största cirkeln till 30 punkter. Vi kan även ta bort rutnätet och axlarna genom att använda theme_void(). Tyvärr försvinner inte rutnätet (vilket det borde göra!), men vi kan göra det osynligt genom att göra det transparent.
+Kartan ser någorlunda ut, men går att snygga till. Vi kan börja med att öka storleken på den största cirkeln till 30 punkter. Vi kan även ta bort rutnätet och axlarna genom att använda theme_void().
 
 
 
 ```{r, message=F,  warning=FALSE}
 # Rita karta med storleksproportionella cirklar
 library(scales)
-p <- p + scale_size_area(max_size = 30,
+p <- ggplot(data = arrange(dfkom_skane, desc(ant_sys))) +
+  geom_sf(aes(geometry = geometry),
+          colour = "darkgrey") +
+  geom_sf(aes(geometry = centroider, size = ant_sys),
+          shape = 21,
+          fill = "red",
+          alpha = 2/3,
+          colour = "black",
+          show.legend = "point") +
+  scale_size_area(name = "Sysselsatta i 1000-tal", max_size = 30,
                   labels = scales::comma_format(accuracy = 1, big.mark = " "),
                   breaks = c(25000, 50000, 75000)) +
   theme_void() +
   labs(
     title = "Dagbefolkning år 2016",
-    size = "Sysselsatta i 1000-tal",
     caption = "Källa: SCB"
   ) +
-  guides(size = guide_legend(title.position = "top")) +
-    theme(panel.grid = element_line(colour = 'transparent'))
-
-p
+  guides(size = guide_legend(title.position = "top"))
+  
+  
+  p
   
 ```
 
