@@ -125,15 +125,15 @@ bodytxt0 &lt;- &#39;{
   
   head(df)</code></pre>
 <pre><code>## # A tibble: 6 x 8
-##   region civilstand alder kon   folkmangd_2014 folkmangd_2015
-##   &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt; &lt;chr&gt;          &lt;int&gt;          &lt;int&gt;
-## 1 0561 ~ ogifta     0-4 ~ män              273            297
-## 2 0561 ~ ogifta     0-4 ~ kvin~            275            293
-## 3 0561 ~ ogifta     5-14~ män              618            618
-## 4 0561 ~ ogifta     5-14~ kvin~            641            629
-## 5 0561 ~ ogifta     15-2~ män              696            689
-## 6 0561 ~ ogifta     15-2~ kvin~            635            626
-## # ... with 2 more variables: folkmangd_2016 &lt;int&gt;, folkmangd_2017 &lt;int&gt;</code></pre>
+##   region civilstand alder kon   folkmangd_2014 folkmangd_2015 folkmangd_2016
+##   &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt; &lt;chr&gt;          &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+## 1 0561 ~ ogifta     0-4 ~ män              273            297            306
+## 2 0561 ~ ogifta     0-4 ~ kvin~            275            293            318
+## 3 0561 ~ ogifta     5-14~ män              618            618            627
+## 4 0561 ~ ogifta     5-14~ kvin~            641            629            627
+## 5 0561 ~ ogifta     15-2~ män              696            689            653
+## 6 0561 ~ ogifta     15-2~ kvin~            635            626            619
+## # ... with 1 more variable: folkmangd_2017 &lt;dbl&gt;</code></pre>
 <p>Resultatet ser ganska ok ut, men befolkningen för varje årtal ligger i en egen kolumn. Jag vill helst att alla årtal ska ligga i en egen kolumn. Paketet tidyr har en funktion som heter “gather” som kan användas för att omformatera tabellen som jag vill ha den. Jag använder även funktionern “str_remove_all” i stringr-paketet för att ta bort alla förekomster av “Folkmangd_” i aar- kolumnen, för att därefter ändra format från character till intiger. Jag vill dessutom att kommunkoderna och kommunnamnen ska stå i varsin kolumn. Detta gör jag med hjälp av “sepatate”-funktionen i tidyr.</p>
 <pre class="r"><code>  df %&gt;%
     gather(aar, value, folkmangd_2014:folkmangd_2017) %&gt;%
@@ -148,7 +148,7 @@ bodytxt0 &lt;- &#39;{
     )</code></pre>
 <pre><code>## # A tibble: 480 x 7
 ##    kom_kod kom_namn   civilstand alder    kon       aar value
-##    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;int&gt;
+##    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;dbl&gt;
 ##  1 0561    Åtvidaberg ogifta     0-4 år   män      2014   273
 ##  2 0561    Åtvidaberg ogifta     0-4 år   kvinnor  2014   275
 ##  3 0561    Åtvidaberg ogifta     5-14 år  män      2014   618
@@ -179,7 +179,7 @@ bodytxt0 &lt;- &#39;{
     )</code></pre>
 <pre><code>## # A tibble: 480 x 7
 ##    kom_kod kom_namn   civilstand alder    kon       aar value
-##    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;int&gt;
+##    &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;dbl&gt;
 ##  1 0561    Åtvidaberg ogifta     0-4 år   män      2014   273
 ##  2 0561    Åtvidaberg ogifta     0-4 år   kvinnor  2014   275
 ##  3 0561    Åtvidaberg ogifta     5-14 år  män      2014   618

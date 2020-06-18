@@ -55,15 +55,23 @@ df &lt;-
                          ContentsCode = c(&#39;BE0101N1&#39;),
                          Tid = c(&#39;*&#39;)),
              clean = TRUE)</code></pre>
+<pre><code>## Warning: &#39;get_pxweb_data&#39; is deprecated.
+## Use &#39;pxweb_get_data&#39; instead.
+## See help(&quot;Deprecated&quot;)</code></pre>
+<pre><code>## Warning: &#39;get_pxweb_dims&#39; is deprecated.
+## Use &#39;pxweb_advanced_get&#39; instead.
+## See help(&quot;Deprecated&quot;)</code></pre>
+<pre><code>## Warning: data.table::melt() is now used with get_pxweb_data(..., clean = TRUE).
+## The order of the data may be different, please check your results.</code></pre>
 <p>En mindre bra sak med pxweb är att det inte går att välja bort dimensioner. Den dataframe jag hämtat från SCB innehåller alla dimensioner som SCB redovisar i vald tabell:</p>
 <pre class="r"><code>head(df)</code></pre>
-<pre><code>##     region civilstånd        ålder kön   år tabellinnehåll  values
-## 1 00 Riket     ogifta totalt ålder män 1968      Folkmängd 1833641
-## 2 00 Riket     ogifta totalt ålder män 1969      Folkmängd 1857631
-## 3 00 Riket     ogifta totalt ålder män 1970      Folkmängd 1884570
-## 4 00 Riket     ogifta totalt ålder män 1971      Folkmängd 1899395
-## 5 00 Riket     ogifta totalt ålder män 1972      Folkmängd 1910239
-## 6 00 Riket     ogifta totalt ålder män 1973      Folkmängd 1921499</code></pre>
+<pre><code>##     region civilstånd        ålder     kön ContentsCode  Tid  values
+## 1 00 Riket     ogifta totalt ålder     män    Folkmängd 1968 1833641
+## 2 00 Riket     ogifta totalt ålder kvinnor    Folkmängd 1968 1585685
+## 3 00 Riket      gifta totalt ålder     män    Folkmängd 1968 1909250
+## 4 00 Riket      gifta totalt ålder kvinnor    Folkmängd 1968 1914963
+## 5 00 Riket     skilda totalt ålder     män    Folkmängd 1968   91094
+## 6 00 Riket     skilda totalt ålder kvinnor    Folkmängd 1968  120606</code></pre>
 <p>Även om jag bara är intresserad av totalbefolkningen i Sverige så måste jag alltså välja kön, ålder och civilstånd. Vill jag ha bara ha totalbefolkningen så måste jag därför aggregera bort oönskade variabler. En annan irriterande sak är att alla icke-numeriska variabler görs om till factor. Även årtalet blir en factor och inte av typ date eller integer, vilket vore rimligare. Jag väljer därför att först göra om alla variabler av typ factor till character med hjälp av dplyrs “mutate_if”-funktion. Därefefter aggregerar jag bort alla dimensioner förutom år och antal invånare. Sedan typkonverterar jag årtalen till heltal (integer):</p>
 <pre class="r"><code>library(dplyr)
 
@@ -71,7 +79,7 @@ df &lt;-
 df &lt;- mutate_if(df, is.factor, as.character)
 
 df &lt;- df %&gt;%
-  select(år, values) %&gt;%
+  select(år = Tid, values) %&gt;%
   group_by(år) %&gt;%
   summarise(values = sum(values)) %&gt;%
   ungroup() %&gt;%

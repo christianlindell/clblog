@@ -151,7 +151,7 @@ unnest(dfanswer)
 # # ... with 386 more rows</code></pre>
 <p>Nu är det dags att hämta hem data. Det gör man genom att bygga frågan med Dst:s <a href="https://api.statbank.dk/console#data">hjälpsida</a>. Nedan har vi valt befolkning som är 54 och 55 år gamla och vi har valt båda könen (vilket markeras med en asterix) och ett födelseland (Danmark).</p>
 <p>Gå till Dst:s konsolsida, se till så att “Choose API call:” är satt till Retrive data, “Table id” är satt till BEF5 och “Language” till English.</p>
-<p>Variabler kan väljas genom att man klickar på dem i rutan&quot; Variable- and value codes&quot;
+<p>Variabler kan väljas genom att man klickar på dem i rutan" Variable- and value codes"
 <img src="/post/2018-06-23-ladda-hem-data-från-danmarks-statistk-med-r-med-dst-s-api_files/dst_konsol.png" /></p>
 <pre class="r"><code>bodytxt &lt;- &#39;{
   &quot;lang&quot;: &quot;en&quot;,

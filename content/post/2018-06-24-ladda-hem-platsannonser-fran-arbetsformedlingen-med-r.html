@@ -31,7 +31,7 @@ frensa_gdpr &lt;- function(txt) {
   }
   return(txt)
 }</code></pre>
-<p>Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda hem annonstexterna. Funktionen nedan laddar hem metadata för alla aktuella platsannoner för ett visst län och ett visst yrkesområde. Om man vill ladda hem data för hela riket så anger man län som en tom sträng. Län anges genom att funktionsargumentet lan sätt till länsnumret (det är de vanliga länsnumren som gäller, Stockholm är lika med 01, SKåne med 12 etc.). En viktig sak man inte får missa och inte framgår av AF:s dokumentation är att språk MÅSTE anges till svenska i GET anropet till servern, dvs “add_headers(”Accept-Language&quot; = “sv”)&quot;. I annat fall returneras ett felmeddelande.</p>
+<p>Varje platsannons har ett unikt annonsid vilket vi måste veta för att ladda hem annonstexterna. Funktionen nedan laddar hem metadata för alla aktuella platsannoner för ett visst län och ett visst yrkesområde. Om man vill ladda hem data för hela riket så anger man län som en tom sträng. Län anges genom att funktionsargumentet lan sätt till länsnumret (det är de vanliga länsnumren som gäller, Stockholm är lika med 01, SKåne med 12 etc.). En viktig sak man inte får missa och inte framgår av AF:s dokumentation är att språk MÅSTE anges till svenska i GET anropet till servern, dvs “add_headers(”Accept-Language" = “sv”)". I annat fall returneras ett felmeddelande.</p>
 <pre class="r"><code>  library(tidyverse)
   library(httr)
   library(jsonlite)

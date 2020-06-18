@@ -49,6 +49,7 @@ if (!file.exists("map_kom/Kommun_Sweref99TM_region.shp") & download_map) {
 
 # Läs in kartan i R
 dfkom <- st_read("map_kom/Kommun_Sweref99TM_region.shp")
+st_crs(dfkom) <- 3006
 
 # Ändra varibeltyp från factor till character.
 dfkom <- mutate_if(dfkom, is.factor, as.character)
@@ -86,6 +87,8 @@ Nu är kommunkartan inläst i en dataframe med namnet dfkom. Vi filterar ut enda
 lan_nr <- c("12")
 
 dfkom_urval <- filter(dfkom, substr(kom_kod, 1, 2) %in% as.character(lan_nr))
+
+
 ```
 
 

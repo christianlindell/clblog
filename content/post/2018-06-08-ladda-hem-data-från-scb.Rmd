@@ -97,7 +97,7 @@ library(dplyr)
 df <- mutate_if(df, is.factor, as.character)
 
 df <- df %>%
-  select(år, values) %>%
+  select(år = Tid, values) %>%
   group_by(år) %>%
   summarise(values = sum(values)) %>%
   ungroup() %>%

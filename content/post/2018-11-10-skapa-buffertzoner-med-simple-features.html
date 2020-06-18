@@ -11,7 +11,7 @@ tags:
 
 
 
-<div id="las-in-en-karta" class="section level2">
+<div id="läs-in-en-karta" class="section level2">
 <h2>Läs in en karta</h2>
 <p>En vanligt syfte med en GIS-analys är att ta reda på hur många personer som finns inom ett visst avstånd från en målpunkt. Detta görs genom att skapa en buffertzon runt målpunkten. Alla som finns inom buffertzonen antas ha tillgång till målpunkten i motsats till de som befinner sig utanför buffertzonen. I och med stödet för Simple Features i R så är det relativt enkelt att göra denna typ av analyser.</p>
 <p>Liksom i förra inlägget börjar vi med att ladda ner en kommunkarta från SCB. Kommunkartan hamnar i katalogen map_kom i arbetskatalogen.</p>
@@ -51,9 +51,10 @@ dfkom &lt;- st_read(&quot;map_kom/Kommun_Sweref99TM_region.shp&quot;)</code></pr
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
 ## bbox:           xmin: 277247.6 ymin: 6133891 xmax: 917271.4 ymax: 7669870
-## epsg (SRID):    3006
-## proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs</code></pre>
-<pre class="r"><code># Ändra varibeltyp från factor till character.
+## projected CRS:  SWEREF99 TM</code></pre>
+<pre class="r"><code>st_crs(dfkom) &lt;- 3006
+
+# Ändra varibeltyp från factor till character.
 dfkom &lt;- mutate_if(dfkom, is.factor, as.character)
 
 
