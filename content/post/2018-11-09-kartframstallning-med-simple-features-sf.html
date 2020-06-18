@@ -11,7 +11,7 @@ tags:
 
 
 
-<div id="enkel-kartframstallning-med-ggplot2-och-simple-features-sf" class="section level1">
+<div id="enkel-kartframställning-med-ggplot2-och-simple-features-sf" class="section level1">
 <h1>Enkel kartframställning med ggplot2 och Simple Features (SF)</h1>
 <p>Jag är absolut ingen GIS-expert, men då och då behöver jag redovisa statistik på en karta. Sedan några år tillbaka har det blivit betydligt enklare i R i och med att Simple Features lancerats och fått stöd i ggplot2 och i dplyr.</p>
 <p>Vad är då sf? Sf är ett sätt att beskriva geografier som streck, punkter, polygoner m.m. Det som gör det hela speciellt trevligt att jobba med är att den geografiska informationen kopplas till data genom att den lagras i en listkolumn i en vanlig dataframe. En karta över alla Sveriges kommuners befolkning lagras som en dataframe med 290 rader + en listkolumn med geografiska data för varje kommun. Vi kan tänka oss att varje rad består av tre kolumner: Kommunkod och befolkning, men sist ligger även en list-kolumn (vanligtvis med namnet geometry). Eftersom det i grunden är en vanlig dataframe (fast med pålagd geografisk information) så kan den - nästan - hanteras som vilken dataframe som helst.</p>
@@ -25,8 +25,6 @@ library(pxweb)
 library(scales)
 library(magrittr)
 library(janitor)
-
-set.seed(15)
 
 
 download_map &lt;- TRUE
@@ -53,8 +51,7 @@ if (!file.exists(&quot;map_kom/Kommun_Sweref99TM_region.shp&quot;) &amp; downloa
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
 ## bbox:           xmin: 277247.6 ymin: 6133891 xmax: 917271.4 ymax: 7669870
-## epsg (SRID):    3006
-## proj4string:    +proj=utm +zone=33 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs</code></pre>
+## projected CRS:  SWEREF99 TM</code></pre>
 <p>Vi gör om variablerna från factor till character och döper om variablerna så att vi slipper stora bokstäver (Jag tycker det är hopplöst och hålla rätt på variabelnamn med blandade stora och små bokstäver. För mig är det dessutom icke-intuitiva namn. Jag skulle inte döpa en variabel till KnKod utan till komKod om jag skulle köra camel-case… men det är naturligtvis en personlig preferens.)</p>
 <pre class="r"><code>dfkom &lt;- mutate_if(dfkom, is.factor, as.character)
 
@@ -85,7 +82,7 @@ dfsys &lt;- dfsys %&gt;%
            extra = &quot;merge&quot;)</code></pre>
 <p>Nu har vi fått fram en karta som ligger i dfkom och en dataframe med sysselsättning per kommun för 2016 som ligger i dfsys. Nu ska vi reducera antalet dimensioner i sysselsättningstabellen. Vi kommer inte att använda oss av kön eller näringsgren så vi tar bort de dimensionerna och aggregerar data så att vi får en siffra över total sysselsättning per kommun. Vi sparar dataframen i dfsys_tot.</p>
 <pre class="r"><code>dfsys_tot &lt;- dfsys %&gt;%
-  select(kom_kod, ar, ant_sys = values) %&gt;%
+  select(kom_kod, ar = tid, ant_sys = values) %&gt;%
   group_by(kom_kod, ar) %&gt;%
   summarise(ant_sys = sum(ant_sys, nna.rm = TRUE)) %&gt;%
   ungroup()</code></pre>
@@ -136,22 +133,30 @@ p</code></pre>
 
 p</code></pre>
 <p><img src="/post/2018-11-09-kartframstallning-med-simple-features-sf_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<p>Kartan ser någorlunda ut, men går att snygga till. Vi kan börja med att öka storleken på den största cirkeln till 30 punkter. Vi kan även ta bort rutnätet och axlarna genom att använda theme_void(). Tyvärr försvinner inte rutnätet (vilket det borde göra!), men vi kan göra det osynligt genom att göra det transparent.</p>
+<p>Kartan ser någorlunda ut, men går att snygga till. Vi kan börja med att öka storleken på den största cirkeln till 30 punkter. Vi kan även ta bort rutnätet och axlarna genom att använda theme_void().</p>
 <pre class="r"><code># Rita karta med storleksproportionella cirklar
 library(scales)
-p &lt;- p + scale_size_area(max_size = 30,
+p &lt;- ggplot(data = arrange(dfkom_skane, desc(ant_sys))) +
+  geom_sf(aes(geometry = geometry),
+          colour = &quot;darkgrey&quot;) +
+  geom_sf(aes(geometry = centroider, size = ant_sys),
+          shape = 21,
+          fill = &quot;red&quot;,
+          alpha = 2/3,
+          colour = &quot;black&quot;,
+          show.legend = &quot;point&quot;) +
+  scale_size_area(name = &quot;Sysselsatta i 1000-tal&quot;, max_size = 30,
                   labels = scales::comma_format(accuracy = 1, big.mark = &quot; &quot;),
                   breaks = c(25000, 50000, 75000)) +
   theme_void() +
   labs(
     title = &quot;Dagbefolkning år 2016&quot;,
-    size = &quot;Sysselsatta i 1000-tal&quot;,
     caption = &quot;Källa: SCB&quot;
   ) +
-  guides(size = guide_legend(title.position = &quot;top&quot;)) +
-    theme(panel.grid = element_line(colour = &#39;transparent&#39;))
-
-p</code></pre>
+  guides(size = guide_legend(title.position = &quot;top&quot;))
+  
+  
+  p</code></pre>
 <p><img src="/post/2018-11-09-kartframstallning-med-simple-features-sf_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>Personligen gillar jag inte ggplots teckenförklaring för cirklar. Jag tycker att den ser ful ut och dessutom är skrymmande. Jag föredrar att ange absolutvärden för cirklarna direkt på kartan.</p>
 <p>Vi tar bort därför bort teckenförklaringen och lägger istället in värdena i tusental i varje cirkel med hjälp av geom_sf_text. Vi ökar även storleken på cirklarna så att siffrorna som vi lägger in på kartan ryms inom cirklarna. Kartan behöver visas i lite större storlek än här, annars blir cirkeln för Malmö väl stor, men i övrigt är det en rätt ok karta.</p>
