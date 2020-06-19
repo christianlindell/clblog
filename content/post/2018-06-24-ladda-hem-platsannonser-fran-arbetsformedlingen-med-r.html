@@ -12,6 +12,7 @@ tags:
 
 
 
+<p><em>DET HÄR INLÄGGET INNEHÅLLER KOD SOM INTE LÄNGRE FUNKAR EFTERSOM ARBETSFÖRMEDLINGEN BYTT API</em></p>
 <p>Arbetsförmedlingens platsbank har ett <a href="https://www.arbetsformedlingen.se/download/18.40fa4e7b159ff029331706ca/1486976282357/teknisk-beskrivning-lediga-jobb.pdf">api</a> som gör att man relativt enkelt kan ladda hem annonser för bearbetning i R.</p>
 <p>I det här inlägget beskriver jag hur jag gått tillväga för att ladda hem platsannonser som jag sedan använt för att göra en <a href="http://filer.skane.com/textanalys_platsannonser/data_it/Efterfragan_data_och_it.html">textanalys</a> av vilka kompetenser som arbetsgivare efterfrågar.</p>
 <p>Med införandet av GDPR följer ett eventuellt problem. Platsannonserna innehåller persondata och rättsläget är osäkert vad beträffar rätten att lagra personuppgifter. För säkerhets skull så börjar jag därför med att definiera en funktion som rensar bort alla meningar i löptext vilka innehåller telefonnummer eller mailadresser. Det innebär att i stort sett samtliga personuppgifter försvinner.</p>

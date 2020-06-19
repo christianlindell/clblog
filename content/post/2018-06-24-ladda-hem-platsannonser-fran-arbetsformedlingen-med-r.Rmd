@@ -16,6 +16,7 @@ tags:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, eval = FALSE)
 ```
 
+*DET HÄR INLÄGGET INNEHÅLLER KOD SOM INTE LÄNGRE FUNKAR EFTERSOM ARBETSFÖRMEDLINGEN BYTT API*
 
 Arbetsförmedlingens platsbank har ett [api](https://www.arbetsformedlingen.se/download/18.40fa4e7b159ff029331706ca/1486976282357/teknisk-beskrivning-lediga-jobb.pdf) som gör att man relativt enkelt kan ladda hem annonser för bearbetning i R. 
 
