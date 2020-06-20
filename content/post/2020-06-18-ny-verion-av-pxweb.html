@@ -11,11 +11,17 @@ tags:
 
 
 
-<p>Det första inlägget jag skrev på den här bloggen handlade om att ladda hem data med hjälp av pxweb-paketet. Sedan dess har det kommit en ny version av pxweb. Den gamla koden jag publicerat fungerar fortfarande, men den nya versionen fungerar annorlunda än den gamla: Koden som genereras ser annorlunda ut och ny funktionalitet har tillkommit. Det allra bästa med den nya versionen är att det går att hoppa över dimensioner. Vill man bara ha befolkning per kommun så kan man till exempel välja att inte ladda ner civilstånd och kön. Tidigare fick man plocka hem alla dimenstioner som fanns i tabellen hos SCB, för att därefter aggregera lokalt i R.</p>
+<p>Det första inlägget jag skrev på den här bloggen handlade om att ladda hem data med hjälp av pxweb-paketet. Sedan dess har det kommit en ny version av pxweb. Den gamla koden jag publicerat fungerar fortfarande, men den nya versionen av pxweb fungerar annorlunda än den gamla: Koden som genereras ser annorlunda ut och ny funktionalitet har tillkommit. Det allra bästa med den nya versionen är att det går att hoppa över dimensioner. Vill man bara ha befolkning per kommun så kan man till exempel välja att inte ladda ner civilstånd och kön. Tidigare fick man plocka hem alla dimensioner som fanns i tabellen hos SCB, för att därefter aggregera lokalt i R.</p>
 <pre class="r"><code># Börja med att starta i interaktivt läge
 library(pxweb)
 
-d &lt;- pxweb_interactive(&quot;api.scb.se&quot;)</code></pre>
+
+d &lt;- pxweb_interactive(&quot;api.scb.se&quot;)
+
+# Notera att de smugit sig in ett fel i det exempel som finns om hur 
+# man använder pxweb_interactive() i dokumentationen som medföljer paketet.
+# I dokumentationen står det: &quot;pxweb_interactive(api = &quot;api.scb.se&quot;)&quot;, 
+# vilket genererar ett fel.</code></pre>
 <p>Nu har vi startat en interaktiv session där vi med hjälp av menyval i konsolfönstret bygger frågan vi ska skicka till SCB:s databas:</p>
 <pre class="r"><code>==============================================================
  R PXWEB: Content of &#39;api.scb.se&#39;
@@ -25,7 +31,7 @@ d &lt;- pxweb_interactive(&quot;api.scb.se&quot;)</code></pre>
 Enter your choice:
 (&#39;esc&#39; = Quit, &#39;i&#39; = Show id)
 1: 1</code></pre>
-<p>Skriv in siffran “1” för att välja att du vill ha version 1 av api:et (ett enkelt val eftersom det är det enda alternativet). Därefter väljer man språk.</p>
+<p>Skriv in siffran “1” för att välja att du vill ha version 1 av api:et (ett enkelt val eftersom det är det enda alternativet). Därefter väljer man språk:</p>
 <pre class="r"><code>=============================================================
  R PXWEB: Content of &#39;api.scb.se&#39;
           at &#39;/OV0104/v1&#39;
@@ -36,7 +42,7 @@ Enter your choice:
 Enter your choice:
 (&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;i&#39; = Show id)
 1: 2</code></pre>
-<p>Jag väljer att jag vill ha svenska som språk genom att trycka på 2 och enter. Därefter väljer jag alternativ 1 för att komma till statistikdatabasen.</p>
+<p>Jag väljer att jag vill ha svenska som språk genom att trycka på “2” och enter. Därefter väljer jag alternativ “1” för att komma till statistikdatabasen.</p>
 <pre class="r"><code>=============================================================
  R PXWEB: Content of &#39;api.scb.se&#39;
           at &#39;/OV0104/v1/doris/sv&#39;
@@ -126,7 +132,7 @@ Enter one or more choices:
 Separate multiple choices by &#39;,&#39; and intervals of choices by &#39;:&#39;
 (&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;*&#39; = Select all, &#39;e&#39; = Eliminate, &#39;i&#39; = Show id)
 1: 1,107:139</code></pre>
-<p>Vid promten skriver jag in 1,107:139, vilket innebär att jag väljer riket samt alla kommuner i Skåne. Nästa meny handlar om att välja vilka civilstånd man vill plocka ut data för. Eftersom jag inte är intresserad av den dimensionen så trycker jag på “e” för att eliminera den dimensionen.</p>
+<p>Vid promten skriver jag in 1,107:139, vilket innebär att jag väljer riket samt alla kommuner i Skåne. Nästa meny handlar om att välja vilka civilstånd man vill plocka ut data för. Eftersom jag inte är intresserad av den dimensionen så trycker jag på “e” för att eliminera dimensionen.</p>
 <pre class="r"><code>======================================================================================================================
  R PXWEB: Content of &#39;api.scb.se&#39;
           at &#39;/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101A/BefolkningNy&#39;
@@ -156,7 +162,7 @@ Enter one or more choices:
 Separate multiple choices by &#39;,&#39; and intervals of choices by &#39;:&#39;
 (&#39;esc&#39; = Quit, &#39;b&#39; = Back, &#39;*&#39; = Select all, &#39;e&#39; = Eliminate, &#39;i&#39; = Show id)
 1: *</code></pre>
-<p>I nästa meny väljer jag alternativ 1 (Folkmängd). I nästa meny väljer man vilket år data ska avse och där väljer jag att hämta data för 2019, vilket är alternativ 52. I och med det så har jag gjort alla val av data som behövs. Nu återstår några sista val som rör hur tabellen ska hämtas hem. Jag väljer att hämta hem data och printa koden som behövs för nedladdningen i konsolen:</p>
+<p>I nästa meny väljer jag alternativ “1” (Folkmängd). I nästa meny väljer man vilket år data ska avse och där väljer jag att hämta data för 2019, vilket är alternativ “52”. I och med det så har jag gjort alla val av data som behövs. Nu återstår några sista val som rör hur tabellen ska hämtas hem. Jag väljer att hämta hem data och printa koden som behövs för nedladdningen i konsolen:</p>
 <pre class="r"><code>Do you want to print code to query and download data?
 Enter your choice:
 (&#39;esc&#39; = Quit, &#39;y&#39; = Yes, &#39;n&#39; = No)

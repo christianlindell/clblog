@@ -9,13 +9,19 @@ tags:
   - pxweb
 ---
 
-Det första inlägget jag skrev på den här bloggen handlade om att ladda hem data med hjälp av pxweb-paketet. Sedan dess har det kommit en ny version av pxweb. Den gamla koden jag publicerat fungerar fortfarande, men den nya versionen fungerar annorlunda än den gamla: Koden som genereras ser annorlunda ut och ny funktionalitet har tillkommit. Det allra bästa med den nya versionen är att det går att hoppa över dimensioner. Vill man bara ha befolkning per kommun så kan man till exempel välja att inte ladda ner civilstånd och kön. Tidigare fick man plocka hem alla dimenstioner som fanns i tabellen hos SCB, för att därefter aggregera lokalt i R.
+Det första inlägget jag skrev på den här bloggen handlade om att ladda hem data med hjälp av pxweb-paketet. Sedan dess har det kommit en ny version av pxweb. Den gamla koden jag publicerat fungerar fortfarande, men den nya versionen av pxweb fungerar annorlunda än den gamla: Koden som genereras ser annorlunda ut och ny funktionalitet har tillkommit. Det allra bästa med den nya versionen är att det går att hoppa över dimensioner. Vill man bara ha befolkning per kommun så kan man till exempel välja att inte ladda ner civilstånd och kön. Tidigare fick man plocka hem alla dimensioner som fanns i tabellen hos SCB, för att därefter aggregera lokalt i R.
 
 ```{r, eval=FALSE}
 # Börja med att starta i interaktivt läge
 library(pxweb)
 
+
 d <- pxweb_interactive("api.scb.se")
+
+# Notera att de smugit sig in ett fel i det exempel som finns om hur 
+# man använder pxweb_interactive() i dokumentationen som medföljer paketet.
+# I dokumentationen står det: "pxweb_interactive(api = "api.scb.se")", 
+# vilket genererar ett fel.
 
 ```
 
@@ -32,7 +38,7 @@ Enter your choice:
 1: 1
 ```
 
-Skriv in siffran "1" för att välja att du vill ha version 1 av api:et (ett enkelt val eftersom det är det enda alternativet). Därefter väljer man språk.
+Skriv in siffran "1" för att välja att du vill ha version 1 av api:et (ett enkelt val eftersom det är det enda alternativet). Därefter väljer man språk:
 
 ```{r, eval=FALSE}
 =============================================================
@@ -47,7 +53,7 @@ Enter your choice:
 1: 2
 ```
 
-Jag väljer att jag vill ha svenska som språk genom att trycka på 2 och enter. Därefter väljer jag alternativ 1 för att komma till statistikdatabasen.
+Jag väljer att jag vill ha svenska som språk genom att trycka på "2" och enter. Därefter väljer jag alternativ "1" för att komma till statistikdatabasen.
 
 ```{r, eval=FALSE}
 =============================================================
@@ -157,7 +163,7 @@ Separate multiple choices by ',' and intervals of choices by ':'
 1: 1,107:139
 ```
 
-Vid promten skriver jag in 1,107:139, vilket innebär att jag väljer riket samt alla kommuner i Skåne. Nästa meny handlar om att välja vilka civilstånd man vill plocka ut data för. Eftersom jag inte är intresserad av den dimensionen så trycker jag på "e" för att eliminera den dimensionen.
+Vid promten skriver jag in 1,107:139, vilket innebär att jag väljer riket samt alla kommuner i Skåne. Nästa meny handlar om att välja vilka civilstånd man vill plocka ut data för. Eftersom jag inte är intresserad av den dimensionen så trycker jag på "e" för att eliminera dimensionen.
 
 ```{r, eval=FALSE}
 ======================================================================================================================
@@ -197,7 +203,7 @@ Separate multiple choices by ',' and intervals of choices by ':'
 
 ```
 
-I nästa meny väljer jag alternativ 1 (Folkmängd). I nästa meny väljer man vilket år data ska avse och där väljer jag att hämta data för 2019, vilket är alternativ 52. I och med det så har jag gjort alla val av data som behövs. Nu återstår några sista val som rör hur tabellen ska hämtas hem. Jag väljer att hämta hem data och printa koden som behövs för nedladdningen i konsolen:
+I nästa meny väljer jag alternativ "1" (Folkmängd). I nästa meny väljer man vilket år data ska avse och där väljer jag att hämta data för 2019, vilket är alternativ "52". I och med det så har jag gjort alla val av data som behövs. Nu återstår några sista val som rör hur tabellen ska hämtas hem. Jag väljer att hämta hem data och printa koden som behövs för nedladdningen i konsolen:
 
 ```{r, eval=FALSE}
 Do you want to print code to query and download data?
@@ -345,5 +351,4 @@ head(dfkoder_klartext)
 5    1230 Staffanstorp totalt ålder     män 2019     12589
 6    1230 Staffanstorp totalt ålder kvinnor 2019     12807
 ```
-
 
